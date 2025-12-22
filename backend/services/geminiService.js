@@ -1,22 +1,15 @@
 import { getGenerativeModel } from '../config/vertexai.js';
+import {
+  generateSystemPrompt as createSystemPrompt,
+  generateRedFlagPrompt,
+  generateAnalysisPrompt
+} from '../prompts/index.js';
 
 /**
  * Generate System Prompt for Interview
  */
 export const generateSystemPrompt = (userProfile, mode) => {
-  const { visaType, country, age, field } = userProfile;
-
-  // TODO: Implement full system prompt template from spec
-  // This is a placeholder that will be expanded in the prompt-engineering phase
-
-  return `You are a US consular officer conducting a ${visaType} visa interview.
-Applicant: ${age} years old from ${country}, field: ${field}
-Mode: ${mode}
-
-${mode === 'practice'
-  ? 'You can pause to coach when red flags are detected.'
-  : 'Conduct a realistic interview without interruptions.'
-}`;
+  return createSystemPrompt(userProfile, mode);
 };
 
 /**
@@ -47,9 +40,17 @@ export const processConversationTurn = async (systemPrompt, conversationHistory,
 /**
  * Detect Red Flags in Practice Mode
  */
-export const detectRedFlags = async (answer, context) => {
-  // TODO: Implement red flag detection with Gemini
-  // This will use a specific prompt to analyze the answer
+export const detectRedFlags = async (answer, question, visaType, country) => {
+  // TODO: Implement actual Gemini API call for red flag detection
+  // For now, return null (will be implemented when Vertex AI is configured)
+
+  const prompt = generateRedFlagPrompt(visaType, country, question, answer);
+
+  // Placeholder - actual implementation:
+  // const model = getGenerativeModel();
+  // const result = await model.generateContent(prompt);
+  // const responseText = result.response.text();
+  // return JSON.parse(responseText);
 
   return null; // No red flags detected (placeholder)
 };
@@ -58,15 +59,26 @@ export const detectRedFlags = async (answer, context) => {
  * Analyze Complete Interview
  */
 export const analyzeInterview = async (transcript, userProfile) => {
-  // TODO: Implement comprehensive analysis with Gemini
-  // This will use the analysis prompt from the spec
+  const { visaType } = userProfile;
+
+  // TODO: Implement actual Gemini API call for analysis
+  // For now, return placeholder data (will be implemented when Vertex AI is configured)
+
+  const prompt = generateAnalysisPrompt(visaType, userProfile, transcript);
+
+  // Placeholder - actual implementation:
+  // const model = getGenerativeModel();
+  // const result = await model.generateContent(prompt);
+  // const responseText = result.response.text();
+  // return JSON.parse(responseText);
 
   return {
     overallScore: 7.5,
     approvalLikelihood: 75,
     likelyOutcome: 'approved',
+    keyFactor: 'Strong academic background and clear return plans',
     redFlags: [],
-    strengths: ['Clear answers', 'Confident delivery'],
+    strengths: ['Clear answers', 'Confident delivery', 'Specific study plans'],
     scores: {
       clarity: 8,
       confidence: 7,
@@ -74,8 +86,14 @@ export const analyzeInterview = async (transcript, userProfile) => {
       returnIntent: 8
     },
     recommendations: [
-      'Practice explaining your return plans with more specific details'
+      'Practice explaining your return plans with more specific details',
+      'Prepare concrete examples of career opportunities in your home country',
+      'Be ready to discuss why this specific university for your field'
     ],
-    nextFocus: 'Strengthen return intent demonstration'
+    weakAnswersAnalysis: [],
+    nextFocus: 'Strengthen return intent demonstration',
+    readyForRealInterview: false,
+    whatsMissing: 'Need more specific details about post-graduation career plans',
+    recommendedSessions: 2
   };
 };
