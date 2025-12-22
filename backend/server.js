@@ -4,10 +4,13 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 
-// Import routes (will be created in Phase 1)
-// import authRoutes from './routes/auth.js';
-// import interviewRoutes from './routes/interview.js';
-// import userRoutes from './routes/user.js';
+// Import routes
+import authRoutes from './routes/auth.js';
+import interviewRoutes from './routes/interview.js';
+import userRoutes from './routes/user.js';
+
+// Import middleware
+import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 // Load environment variables
 dotenv.config();
@@ -38,28 +41,21 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    service: 'visa-interview-api'
+    service: 'visa-interview-api',
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
-// API routes (will be uncommented in Phase 2+)
-// app.use('/api/auth', authRoutes);
-// app.use('/api/interview', interviewRoutes);
-// app.use('/api/user', userRoutes);
+// API routes
+app.use('/api/auth', authRoutes);
+app.use('/api/interview', interviewRoutes);
+app.use('/api/user', userRoutes);
 
 // 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
+app.use('*', notFoundHandler);
 
 // Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-  });
-});
+app.use(errorHandler);
 
 // Start server
 app.listen(PORT, () => {
