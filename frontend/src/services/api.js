@@ -49,6 +49,11 @@ export const authAPI = {
     return response.data;
   },
 
+  createProfileFromGoogle: async (data) => {
+    const response = await api.post('/auth/google-profile', data);
+    return response.data;
+  },
+
   getProfile: async () => {
     const response = await api.get('/auth/profile');
     return response.data;

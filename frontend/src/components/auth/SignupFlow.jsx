@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { VISA_TYPES } from '../../utils/constants';
+import GoogleSignInButton from './GoogleSignInButton';
 
 const SignupFlow = () => {
   const navigate = useNavigate();
-  const { signup } = useAuth();
+  const { signup, loginWithGoogle } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
 
   const [formData, setFormData] = useState({
@@ -95,6 +97,24 @@ const SignupFlow = () => {
     setError('');
   };
 
+  const handleGoogleSignUp = async () => {
+    setGoogleLoading(true);
+    setError('');
+
+    try {
+      await loginWithGoogle();
+      // If user signed in with Google for the first time, they'll need to complete their profile
+      // For now, just navigate to dashboard
+      navigate('/dashboard');
+    } catch (err) {
+      if (err.message !== 'Sign-in cancelled') {
+        setError(err.message || 'Google sign-in failed');
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -166,6 +186,21 @@ const SignupFlow = () => {
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
               {error}
             </div>
+          )}
+
+          {/* Show Google Sign-In only on Step 1 */}
+          {step === 1 && (
+            <>
+              <GoogleSignInButton onClick={handleGoogleSignUp} loading={googleLoading} />
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">Or continue with email</span>
+                </div>
+              </div>
+            </>
           )}
 
           <form onSubmit={handleSubmit}>

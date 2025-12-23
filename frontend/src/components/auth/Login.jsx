@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import GoogleSignInButton from './GoogleSignInButton';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleChange = (e) => {
@@ -41,6 +43,22 @@ const Login = () => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    setError('');
+
+    try {
+      await loginWithGoogle();
+      navigate('/dashboard');
+    } catch (err) {
+      if (err.message !== 'Sign-in cancelled') {
+        setError(err.message || 'Google sign-in failed');
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -55,6 +73,18 @@ const Login = () => {
               {error}
             </div>
           )}
+
+          {/* Google Sign-In */}
+          <GoogleSignInButton onClick={handleGoogleSignIn} loading={googleLoading} />
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">Or continue with email</span>
+            </div>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -86,7 +116,7 @@ const Login = () => {
             <button
               type="submit"
               className="btn-primary w-full"
-              disabled={loading}
+              disabled={loading || googleLoading}
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
