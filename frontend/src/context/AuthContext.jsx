@@ -1,4 +1,13 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged
+} from 'firebase/auth';
+import { auth, googleProvider } from '../config/firebase';
+import { authAPI } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -7,37 +16,143 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored token on mount
-    const token = localStorage.getItem('token');
-    if (token) {
-      // TODO: Validate token and fetch user profile
+    // Listen to Firebase auth state changes
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          // Get Firebase ID token
+          const token = await firebaseUser.getIdToken();
+          localStorage.setItem('token', token);
+
+          // Fetch or create user profile from backend
+          try {
+            const profileData = await authAPI.getProfile();
+            setUser({ ...firebaseUser, profile: profileData.profile });
+          } catch (error) {
+            // User exists in Firebase but not in backend (shouldn't happen normally)
+            console.error('Profile fetch error:', error);
+            setUser(firebaseUser);
+          }
+        } catch (error) {
+          console.error('Token error:', error);
+          setUser(null);
+        }
+      } else {
+        localStorage.removeItem('token');
+        setUser(null);
+      }
       setLoading(false);
-    } else {
-      setLoading(false);
-    }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const login = async (email, password) => {
-    // TODO: Implement in Phase 2
-    console.log('Login:', email, password);
+    try {
+      // Sign in with Firebase
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const token = await userCredential.user.getIdToken();
+
+      // Backend will automatically fetch/create profile via onAuthStateChanged
+      return userCredential.user;
+    } catch (error) {
+      const errorMessage = error.code === 'auth/invalid-credential'
+        ? 'Invalid email or password'
+        : error.code === 'auth/user-not-found'
+        ? 'User not found'
+        : error.code === 'auth/wrong-password'
+        ? 'Invalid password'
+        : 'Login failed';
+      throw new Error(errorMessage);
+    }
+  };
+
+  const loginWithGoogle = async () => {
+    try {
+      // Sign in with Google popup
+      const result = await signInWithPopup(auth, googleProvider);
+      const token = await result.user.getIdToken();
+
+      // Check if user profile exists in backend, create if not
+      try {
+        await authAPI.getProfile();
+      } catch (error) {
+        // Profile doesn't exist, create it with basic info
+        await authAPI.createProfileFromGoogle({
+          email: result.user.email,
+          fullName: result.user.displayName,
+          photoURL: result.user.photoURL
+        });
+      }
+
+      return result.user;
+    } catch (error) {
+      if (error.code === 'auth/popup-closed-by-user') {
+        throw new Error('Sign-in cancelled');
+      }
+      throw new Error(error.message || 'Google sign-in failed');
+    }
   };
 
   const signup = async (userData) => {
-    // TODO: Implement in Phase 2
-    console.log('Signup:', userData);
+    try {
+      // Create user in Firebase
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        userData.email,
+        userData.password
+      );
+
+      const token = await userCredential.user.getIdToken();
+
+      // Create profile in backend
+      await authAPI.signup({
+        email: userData.email,
+        fullName: userData.fullName,
+        profile: userData.profile
+      });
+
+      return userCredential.user;
+    } catch (error) {
+      const errorMessage = error.code === 'auth/email-already-in-use'
+        ? 'Email already in use'
+        : error.code === 'auth/weak-password'
+        ? 'Password is too weak'
+        : 'Signup failed';
+      throw new Error(errorMessage);
+    }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      localStorage.removeItem('token');
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  const updateProfile = async (profile) => {
+    try {
+      const data = await authAPI.updateProfile(profile);
+      const updatedUser = { ...user, profile: data.profile };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      return data;
+    } catch (error) {
+      throw new Error(error.response?.data?.error || 'Profile update failed');
+    }
   };
 
   const value = {
     user,
     loading,
     login,
+    loginWithGoogle,
     signup,
-    logout
+    logout,
+    updateProfile
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
