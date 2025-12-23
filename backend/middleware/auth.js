@@ -1,10 +1,10 @@
-import jwt from 'jsonwebtoken';
+import admin from 'firebase-admin';
 import { HTTP_STATUS } from '../utils/constants.js';
 
 /**
- * Verify JWT Token Middleware
+ * Verify Firebase ID Token Middleware
  */
-export const verifyToken = (req, res, next) => {
+export const verifyToken = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -16,21 +16,24 @@ export const verifyToken = (req, res, next) => {
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.userId = decoded.userId;
+    try {
+      // Verify Firebase ID token
+      const decodedToken = await admin.auth().verifyIdToken(token);
+      req.userId = decodedToken.uid;
+      req.userEmail = decodedToken.email;
 
-    next();
-  } catch (error) {
-    if (error.name === 'JsonWebTokenError') {
+      next();
+    } catch (error) {
+      if (error.code === 'auth/id-token-expired') {
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+          error: 'Token expired'
+        });
+      }
       return res.status(HTTP_STATUS.UNAUTHORIZED).json({
         error: 'Invalid token'
       });
     }
-    if (error.name === 'TokenExpiredError') {
-      return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-        error: 'Token expired'
-      });
-    }
+  } catch (error) {
     next(error);
   }
 };

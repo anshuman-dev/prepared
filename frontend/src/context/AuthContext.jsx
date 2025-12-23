@@ -1,4 +1,12 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged
+} from 'firebase/auth';
+import { auth, googleProvider } from '../config/firebase';
 import { authAPI } from '../services/api';
 
 const AuthContext = createContext(null);
@@ -8,63 +16,121 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored token and user on mount
-    const initAuth = async () => {
-      const token = localStorage.getItem('token');
-      const storedUser = localStorage.getItem('user');
-
-      if (token && storedUser) {
+    // Listen to Firebase auth state changes
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
         try {
-          // Validate token by fetching profile
-          const profileData = await authAPI.getProfile();
-          setUser(profileData);
+          // Get Firebase ID token
+          const token = await firebaseUser.getIdToken();
+          localStorage.setItem('token', token);
+
+          // Fetch or create user profile from backend
+          try {
+            const profileData = await authAPI.getProfile();
+            setUser({ ...firebaseUser, profile: profileData.profile });
+          } catch (error) {
+            // User exists in Firebase but not in backend (shouldn't happen normally)
+            console.error('Profile fetch error:', error);
+            setUser(firebaseUser);
+          }
         } catch (error) {
-          // Token invalid, clear storage
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
+          console.error('Token error:', error);
           setUser(null);
         }
+      } else {
+        localStorage.removeItem('token');
+        setUser(null);
       }
       setLoading(false);
-    };
+    });
 
-    initAuth();
+    return () => unsubscribe();
   }, []);
 
   const login = async (email, password) => {
     try {
-      const data = await authAPI.login(email, password);
+      // Sign in with Firebase
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const token = await userCredential.user.getIdToken();
 
-      // Store token and user
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data));
-
-      setUser(data);
-      return data;
+      // Backend will automatically fetch/create profile via onAuthStateChanged
+      return userCredential.user;
     } catch (error) {
-      throw new Error(error.response?.data?.error || 'Login failed');
+      const errorMessage = error.code === 'auth/invalid-credential'
+        ? 'Invalid email or password'
+        : error.code === 'auth/user-not-found'
+        ? 'User not found'
+        : error.code === 'auth/wrong-password'
+        ? 'Invalid password'
+        : 'Login failed';
+      throw new Error(errorMessage);
+    }
+  };
+
+  const loginWithGoogle = async () => {
+    try {
+      // Sign in with Google popup
+      const result = await signInWithPopup(auth, googleProvider);
+      const token = await result.user.getIdToken();
+
+      // Check if user profile exists in backend, create if not
+      try {
+        await authAPI.getProfile();
+      } catch (error) {
+        // Profile doesn't exist, create it with basic info
+        await authAPI.createProfileFromGoogle({
+          email: result.user.email,
+          fullName: result.user.displayName,
+          photoURL: result.user.photoURL
+        });
+      }
+
+      return result.user;
+    } catch (error) {
+      if (error.code === 'auth/popup-closed-by-user') {
+        throw new Error('Sign-in cancelled');
+      }
+      throw new Error(error.message || 'Google sign-in failed');
     }
   };
 
   const signup = async (userData) => {
     try {
-      const data = await authAPI.signup(userData);
+      // Create user in Firebase
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        userData.email,
+        userData.password
+      );
 
-      // Store token and user
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data));
+      const token = await userCredential.user.getIdToken();
 
-      setUser(data);
-      return data;
+      // Create profile in backend
+      await authAPI.signup({
+        email: userData.email,
+        fullName: userData.fullName,
+        profile: userData.profile
+      });
+
+      return userCredential.user;
     } catch (error) {
-      throw new Error(error.response?.data?.error || 'Signup failed');
+      const errorMessage = error.code === 'auth/email-already-in-use'
+        ? 'Email already in use'
+        : error.code === 'auth/weak-password'
+        ? 'Password is too weak'
+        : 'Signup failed';
+      throw new Error(errorMessage);
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      localStorage.removeItem('token');
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   const updateProfile = async (profile) => {
@@ -83,6 +149,7 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     login,
+    loginWithGoogle,
     signup,
     logout,
     updateProfile
