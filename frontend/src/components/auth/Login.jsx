@@ -5,7 +5,7 @@ import GoogleSignInButton from './GoogleSignInButton';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, loginWithGoogle } = useAuth();
+  const { login, loginWithGoogle, user, isProfileComplete } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -35,10 +35,15 @@ const Login = () => {
 
     try {
       await login(formData.email, formData.password);
-      navigate('/dashboard');
+
+      // Wait for onAuthStateChanged to fetch profile
+      setTimeout(() => {
+        const profileComplete = isProfileComplete(user?.profile);
+        navigate(profileComplete ? '/dashboard' : '/onboarding');
+        setLoading(false);
+      }, 500);
     } catch (err) {
       setError(err.message || 'Invalid email or password');
-    } finally {
       setLoading(false);
     }
   };
@@ -49,12 +54,17 @@ const Login = () => {
 
     try {
       await loginWithGoogle();
-      navigate('/dashboard');
+
+      // Wait for onAuthStateChanged to fetch profile
+      setTimeout(() => {
+        const profileComplete = isProfileComplete(user?.profile);
+        navigate(profileComplete ? '/dashboard' : '/onboarding');
+        setGoogleLoading(false);
+      }, 500);
     } catch (err) {
       if (err.message !== 'Sign-in cancelled') {
         setError(err.message || 'Google sign-in failed');
       }
-    } finally {
       setGoogleLoading(false);
     }
   };
