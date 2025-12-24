@@ -1,14 +1,15 @@
 import express from 'express';
-import { signup, login, getProfile, updateProfile } from '../controllers/authController.js';
+import { signup, login, getProfile, updateProfile, createGoogleProfile } from '../controllers/authController.js';
 import { verifyToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Public routes
-router.post('/signup', signup);
+// Public routes (login doesn't need token)
 router.post('/login', login);
 
-// Protected routes
+// Protected routes (require auth token)
+router.post('/signup', verifyToken, signup);
+router.post('/google-profile', verifyToken, createGoogleProfile);
 router.get('/profile', verifyToken, getProfile);
 router.put('/profile', verifyToken, updateProfile);
 

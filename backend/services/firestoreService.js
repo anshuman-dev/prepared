@@ -1,15 +1,15 @@
 import { getFirestore } from '../config/firebase.js';
 import { COLLECTIONS } from '../utils/constants.js';
 
-const db = getFirestore();
+// Lazy load db to avoid initialization issues
+const getDb = () => getFirestore();
 
 /**
  * USER OPERATIONS
  */
 
-export const createUser = async (userData) => {
-  const userRef = db.collection(COLLECTIONS.USERS).doc();
-  const userId = userRef.id;
+export const createUser = async (userId, userData) => {
+  const userRef = getDb().collection(COLLECTIONS.USERS).doc(userId);
 
   await userRef.set({
     userId,
@@ -20,12 +20,12 @@ export const createUser = async (userData) => {
 };
 
 export const getUser = async (userId) => {
-  const doc = await db.collection(COLLECTIONS.USERS).doc(userId).get();
+  const doc = await getDb().collection(COLLECTIONS.USERS).doc(userId).get();
   return doc.exists ? doc.data() : null;
 };
 
 export const getUserByEmail = async (email) => {
-  const snapshot = await db.collection(COLLECTIONS.USERS)
+  const snapshot = await getDb().collection(COLLECTIONS.USERS)
     .where('email', '==', email)
     .limit(1)
     .get();
@@ -34,7 +34,7 @@ export const getUserByEmail = async (email) => {
 };
 
 export const updateUserProfile = async (userId, profile) => {
-  await db.collection(COLLECTIONS.USERS).doc(userId).update({
+  await getDb().collection(COLLECTIONS.USERS).doc(userId).update({
     profile,
     updatedAt: new Date()
   });
@@ -45,7 +45,7 @@ export const updateUserProfile = async (userId, profile) => {
  */
 
 export const createSession = async (sessionData) => {
-  const sessionRef = db.collection(COLLECTIONS.SESSIONS).doc();
+  const sessionRef = getDb().collection(COLLECTIONS.SESSIONS).doc();
   const sessionId = sessionRef.id;
 
   await sessionRef.set({
@@ -57,12 +57,12 @@ export const createSession = async (sessionData) => {
 };
 
 export const getSession = async (sessionId) => {
-  const doc = await db.collection(COLLECTIONS.SESSIONS).doc(sessionId).get();
+  const doc = await getDb().collection(COLLECTIONS.SESSIONS).doc(sessionId).get();
   return doc.exists ? doc.data() : null;
 };
 
 export const updateSession = async (sessionId, updates) => {
-  await db.collection(COLLECTIONS.SESSIONS).doc(sessionId).update(updates);
+  await getDb().collection(COLLECTIONS.SESSIONS).doc(sessionId).update(updates);
 };
 
 export const addToTranscript = async (sessionId, messages) => {
@@ -75,7 +75,7 @@ export const addToTranscript = async (sessionId, messages) => {
 };
 
 export const getUserSessions = async (userId) => {
-  const snapshot = await db.collection(COLLECTIONS.SESSIONS)
+  const snapshot = await getDb().collection(COLLECTIONS.SESSIONS)
     .where('userId', '==', userId)
     .orderBy('startedAt', 'desc')
     .get();
@@ -84,7 +84,7 @@ export const getUserSessions = async (userId) => {
 };
 
 export const deleteSession = async (sessionId) => {
-  await db.collection(COLLECTIONS.SESSIONS).doc(sessionId).delete();
+  await getDb().collection(COLLECTIONS.SESSIONS).doc(sessionId).delete();
 };
 
 /**
@@ -92,12 +92,12 @@ export const deleteSession = async (sessionId) => {
  */
 
 export const getProgress = async (userId) => {
-  const doc = await db.collection(COLLECTIONS.PROGRESS).doc(userId).get();
+  const doc = await getDb().collection(COLLECTIONS.PROGRESS).doc(userId).get();
   return doc.exists ? doc.data() : null;
 };
 
 export const updateProgress = async (userId, sessionData) => {
-  const progressRef = db.collection(COLLECTIONS.PROGRESS).doc(userId);
+  const progressRef = getDb().collection(COLLECTIONS.PROGRESS).doc(userId);
   const progress = await getProgress(userId);
 
   if (!progress) {

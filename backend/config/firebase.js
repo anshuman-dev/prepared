@@ -1,4 +1,4 @@
-import { Firestore } from '@google-cloud/firestore';
+import admin from 'firebase-admin';
 
 let db = null;
 
@@ -6,12 +6,8 @@ export const initializeFirestore = () => {
   if (db) return db;
 
   try {
-    db = new Firestore({
-      projectId: process.env.GOOGLE_PROJECT_ID,
-      databaseId: process.env.FIRESTORE_DATABASE_ID || '(default)',
-      // keyFilename will be picked up from GOOGLE_APPLICATION_CREDENTIALS env var
-    });
-
+    // Use Firebase Admin's Firestore
+    db = admin.firestore();
     console.log('Firestore initialized successfully');
     return db;
   } catch (error) {

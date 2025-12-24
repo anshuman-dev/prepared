@@ -3,47 +3,45 @@ import * as authService from '../services/authService.js';
 import * as firestoreService from '../services/firestoreService.js';
 
 /**
- * User Signup
+ * User Signup (Firebase Auth)
  * POST /api/auth/signup
+ * Frontend creates Firebase Auth user first, then calls this to store basic profile
  */
 export const signup = async (req, res, next) => {
   try {
-    const { email, password, profile } = req.body;
+    const { email, fullName } = req.body;
+    const userId = req.userId; // Firebase Auth UID from verifyToken middleware
 
     // Validate input
-    if (!email || !password || !profile) {
+    if (!email || !fullName) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
-        error: 'Email, password, and profile are required'
+        error: 'Email and fullName are required'
       });
     }
 
-    // Check if user exists
+    // Note: Firebase Auth user already created by frontend
+    // We just need to store basic user info in Firestore
+    // Profile (visa details) will be added later via onboarding
+
+    // Check if user profile exists
     const existingUser = await firestoreService.getUserByEmail(email);
     if (existingUser) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
-        error: 'User already exists'
+        error: 'User profile already exists'
       });
     }
 
-    // Hash password
-    const passwordHash = await authService.hashPassword(password);
-
-    // Create user
-    const userId = await firestoreService.createUser({
+    // Create user in Firestore using Firebase Auth UID as document ID
+    await firestoreService.createUser(userId, {
       email,
-      passwordHash,
-      profile,
+      fullName,
+      profile: {}, // Empty profile, to be filled during onboarding
       createdAt: new Date()
     });
 
-    // Generate token
-    const token = authService.generateToken(userId);
-
     res.status(HTTP_STATUS.CREATED).json({
       success: true,
-      userId,
-      token,
-      profile
+      userId
     });
   } catch (error) {
     next(error);
@@ -51,43 +49,33 @@ export const signup = async (req, res, next) => {
 };
 
 /**
- * User Login
+ * User Login (Firebase Auth)
  * POST /api/auth/login
+ * NOTE: With Firebase Auth, login happens on frontend via Firebase SDK
+ * This endpoint is kept for potential future use or non-Firebase flows
  */
 export const login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email } = req.body;
 
     // Validate input
-    if (!email || !password) {
+    if (!email) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
-        error: 'Email and password are required'
+        error: 'Email is required'
       });
     }
 
-    // Get user
+    // Get user profile
     const user = await firestoreService.getUserByEmail(email);
     if (!user) {
-      return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-        error: 'Invalid credentials'
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
+        error: 'User profile not found'
       });
     }
-
-    // Verify password
-    const isValid = await authService.comparePassword(password, user.passwordHash);
-    if (!isValid) {
-      return res.status(HTTP_STATUS.UNAUTHORIZED).json({
-        error: 'Invalid credentials'
-      });
-    }
-
-    // Generate token
-    const token = authService.generateToken(user.userId);
 
     res.json({
       success: true,
       userId: user.userId,
-      token,
       profile: user.profile
     });
   } catch (error) {
@@ -140,6 +128,52 @@ export const updateProfile = async (req, res, next) => {
     res.json({
       success: true,
       profile
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Create Profile from Google Sign-In
+ * POST /api/auth/google-profile
+ * Called after Google Sign-In to create user profile
+ */
+export const createGoogleProfile = async (req, res, next) => {
+  try {
+    const { email, fullName, profile } = req.body;
+    const userId = req.userId; // Firebase Auth UID from verifyToken middleware
+
+    // Validate input
+    if (!email || !fullName) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        error: 'Email and fullName are required'
+      });
+    }
+
+    // Check if user profile already exists
+    const existingUser = await firestoreService.getUserByEmail(email);
+    if (existingUser) {
+      // Profile exists, just return it
+      return res.json({
+        success: true,
+        userId: existingUser.userId,
+        profile: existingUser.profile
+      });
+    }
+
+    // Create new user profile using Firebase Auth UID as document ID
+    await firestoreService.createUser(userId, {
+      email,
+      fullName,
+      profile: profile || {},
+      createdAt: new Date()
+    });
+
+    res.status(HTTP_STATUS.CREATED).json({
+      success: true,
+      userId,
+      profile: profile || {}
     });
   } catch (error) {
     next(error);
