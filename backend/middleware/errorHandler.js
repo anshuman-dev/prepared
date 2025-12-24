@@ -13,7 +13,7 @@ export const errorHandler = (err, req, res, next) => {
   });
 
   // Firestore errors
-  if (err.code && err.code.startsWith('firestore/')) {
+  if (err.code && typeof err.code === 'string' && err.code.startsWith('firestore/')) {
     return res.status(HTTP_STATUS.INTERNAL_ERROR).json({
       error: 'Database error',
       ...(process.env.NODE_ENV === 'development' && { details: err.message })

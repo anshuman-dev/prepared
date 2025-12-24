@@ -12,14 +12,17 @@ import userRoutes from './routes/user.js';
 // Import middleware
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
-// Import Firebase Admin
+// Import Firebase Admin and Firestore
 import { initializeFirebaseAdmin } from './config/firebaseAdmin.js';
+import { initializeFirestore } from './config/firebase.js';
 
 // Load environment variables
 dotenv.config();
 
 // Initialize Firebase Admin
 initializeFirebaseAdmin();
+// Initialize Firestore
+initializeFirestore();
 
 const app = express();
 const PORT = process.env.PORT || 8080;
