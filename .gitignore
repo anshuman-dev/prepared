@@ -3,6 +3,7 @@ PROGRESS.md
 VISA_INTERVIEW_AI_SPEC.md
 README.md
 docs/
+API_CONTRACT.md
 
 # Dependencies
 node_modules/
@@ -48,6 +49,7 @@ coverage/
 # Firebase
 .firebase/
 firebase-debug.log
+backend/service-account-key.json
 
 # Google Cloud
 .gcloud/

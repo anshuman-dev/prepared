@@ -10,6 +10,41 @@ export const VISA_TYPES = [
   { value: 'K-1', label: 'K-1 (Fiance Visa)' },
 ];
 
+export const COUNTRIES = [
+  { value: 'India', label: 'India' },
+  { value: 'China', label: 'China' },
+  { value: 'Mexico', label: 'Mexico' },
+  { value: 'Philippines', label: 'Philippines' },
+  { value: 'Vietnam', label: 'Vietnam' },
+  { value: 'Brazil', label: 'Brazil' },
+  { value: 'Nigeria', label: 'Nigeria' },
+  { value: 'South Korea', label: 'South Korea' },
+  { value: 'Colombia', label: 'Colombia' },
+  { value: 'Pakistan', label: 'Pakistan' },
+  { value: 'Bangladesh', label: 'Bangladesh' },
+  { value: 'Nepal', label: 'Nepal' },
+  { value: 'Other', label: 'Other' },
+];
+
+export const FIELDS_OF_STUDY = [
+  { value: 'Computer Science', label: 'Computer Science' },
+  { value: 'Engineering', label: 'Engineering' },
+  { value: 'Business Administration', label: 'Business Administration' },
+  { value: 'Data Science', label: 'Data Science' },
+  { value: 'Medicine', label: 'Medicine' },
+  { value: 'Mathematics', label: 'Mathematics' },
+  { value: 'Physics', label: 'Physics' },
+  { value: 'Chemistry', label: 'Chemistry' },
+  { value: 'Biology', label: 'Biology' },
+  { value: 'Economics', label: 'Economics' },
+  { value: 'Finance', label: 'Finance' },
+  { value: 'Marketing', label: 'Marketing' },
+  { value: 'Law', label: 'Law' },
+  { value: 'Arts', label: 'Arts' },
+  { value: 'Psychology', label: 'Psychology' },
+  { value: 'Other', label: 'Other' },
+];
+
 export const INTERVIEW_MODES = {
   PRACTICE: 'practice',
   SIMULATION: 'simulation'

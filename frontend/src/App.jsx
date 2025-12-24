@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import Login from './components/auth/Login';
 import SignupFlow from './components/auth/SignupFlow';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import Onboarding from './components/onboarding/Onboarding';
 
 // Placeholder components - will be built in later phases
 const Dashboard = () => <div className="p-8">Dashboard</div>;
@@ -20,6 +21,16 @@ function App() {
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignupFlow />} />
+
+            {/* Onboarding (protected but accessible without profile) */}
+            <Route
+              path="/onboarding"
+              element={
+                <ProtectedRoute>
+                  <Onboarding />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Protected routes */}
             <Route

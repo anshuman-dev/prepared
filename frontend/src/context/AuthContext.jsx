@@ -96,7 +96,7 @@ export const AuthProvider = ({ children }) => {
 
   const signup = async (userData) => {
     try {
-      // Create user in Firebase
+      // 1. Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         userData.email,
@@ -104,12 +104,12 @@ export const AuthProvider = ({ children }) => {
       );
 
       const token = await userCredential.user.getIdToken();
+      localStorage.setItem('token', token);
 
-      // Create profile in backend
+      // 2. Create basic user profile in Firestore via backend
       await authAPI.signup({
         email: userData.email,
-        fullName: userData.fullName,
-        profile: userData.profile
+        fullName: userData.fullName
       });
 
       return userCredential.user;
@@ -121,6 +121,16 @@ export const AuthProvider = ({ children }) => {
         : 'Signup failed';
       throw new Error(errorMessage);
     }
+  };
+
+  const updateUserProfile = (profile) => {
+    // Update local user state with profile data
+    setUser(prev => ({ ...prev, profile }));
+  };
+
+  const isProfileComplete = (profile) => {
+    // Check if user has completed onboarding
+    return profile && profile.visaType && profile.country && profile.field;
   };
 
   const logout = async () => {
@@ -152,7 +162,9 @@ export const AuthProvider = ({ children }) => {
     loginWithGoogle,
     signup,
     logout,
-    updateProfile
+    updateProfile,
+    updateUserProfile,
+    isProfileComplete
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
