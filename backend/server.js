@@ -8,6 +8,7 @@ import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/auth.js';
 import interviewRoutes from './routes/interview.js';
 import userRoutes from './routes/user.js';
+import chatCompletionsRoutes from './routes/chatCompletions.js';
 
 // Import middleware
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
@@ -30,7 +31,7 @@ const PORT = process.env.PORT || 8080;
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL || 'http://localhost:3001',
   credentials: true
 }));
 
@@ -59,6 +60,9 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/interview', interviewRoutes);
 app.use('/api/user', userRoutes);
+
+// Public routes (no auth required)
+app.use('/', chatCompletionsRoutes); // OpenAI-compatible endpoint for ElevenLabs
 
 // 404 handler
 app.use('*', notFoundHandler);

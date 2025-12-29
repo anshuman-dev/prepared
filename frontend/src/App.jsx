@@ -4,11 +4,11 @@ import Login from './components/auth/Login';
 import SignupFlow from './components/auth/SignupFlow';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Onboarding from './components/onboarding/Onboarding';
+import Dashboard from './components/dashboard/Dashboard';
+import Interview from './components/interview/Interview';
+import Results from './components/results/Results';
 
 // Placeholder components - will be built in later phases
-const Dashboard = () => <div className="p-8">Dashboard</div>;
-const Interview = () => <div className="p-8">Interview Interface</div>;
-const Results = () => <div className="p-8">Results</div>;
 const Progress = () => <div className="p-8">Progress</div>;
 const Profile = () => <div className="p-8">Profile Settings</div>;
 

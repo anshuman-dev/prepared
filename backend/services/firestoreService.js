@@ -77,10 +77,23 @@ export const addToTranscript = async (sessionId, messages) => {
 export const getUserSessions = async (userId) => {
   const snapshot = await getDb().collection(COLLECTIONS.SESSIONS)
     .where('userId', '==', userId)
-    .orderBy('startedAt', 'desc')
     .get();
 
-  return snapshot.docs.map(doc => doc.data());
+  // Sort in memory for now (TODO: create Firestore index)
+  const sessions = snapshot.docs.map(doc => doc.data());
+  return sessions.sort((a, b) => b.startedAt?.toMillis() - a.startedAt?.toMillis());
+};
+
+export const getAllActiveSessions = async () => {
+  const snapshot = await getDb().collection(COLLECTIONS.SESSIONS)
+    .where('status', '==', 'in_progress')
+    .get();
+
+  // Sort in memory to avoid composite index requirement
+  const sessions = snapshot.docs.map(doc => doc.data());
+  sessions.sort((a, b) => b.startedAt?.toMillis() - a.startedAt?.toMillis());
+
+  return sessions.slice(0, 1); // Return most recent session only
 };
 
 export const deleteSession = async (sessionId) => {

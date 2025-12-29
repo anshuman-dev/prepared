@@ -46,7 +46,7 @@ export const startInterview = async (req, res, next) => {
       sessionId,
       agentConfig: {
         agentId: process.env.ELEVENLABS_AGENT_ID,
-        customLLMEndpoint: `${process.env.BACKEND_URL || 'http://localhost:8080'}/api/interview/gemini-proxy`
+        customLLMEndpoint: `${process.env.BACKEND_URL || 'http://localhost:8080'}/chat/completions?sessionId=${sessionId}`
       }
     });
   } catch (error) {
@@ -60,13 +60,22 @@ export const startInterview = async (req, res, next) => {
  */
 export const geminiProxy = async (req, res, next) => {
   try {
-    const { conversationHistory, sessionId } = req.body;
+    console.log('🔵 Gemini Proxy called!');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    console.log('Query params:', req.query);
+
+    // Get sessionId from query params OR request body
+    const sessionId = req.query.sessionId || req.body.sessionId;
+    const { conversationHistory } = req.body;
 
     if (!sessionId) {
+      console.log('❌ No sessionId in request');
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         error: 'Session ID is required'
       });
     }
+
+    console.log('✅ SessionId:', sessionId);
 
     // Get session context
     const session = await firestoreService.getSession(sessionId);
@@ -107,9 +116,9 @@ export const geminiProxy = async (req, res, next) => {
       );
     }
 
+    // Return in the format ElevenLabs expects for custom LLM
     res.json({
-      content: response.content,
-      redFlag
+      message: response.content
     });
   } catch (error) {
     next(error);
