@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import Landing from './components/Landing';
 import Login from './components/auth/Login';
 import SignupFlow from './components/auth/SignupFlow';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -16,13 +17,13 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen bg-gray-50">
-          <Routes>
-            {/* Public routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<SignupFlow />} />
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignupFlow />} />
 
-            {/* Onboarding (protected but accessible without profile) */}
+          {/* Onboarding (protected but accessible without profile) */}
             <Route
               path="/onboarding"
               element={
@@ -73,11 +74,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
-            {/* Default redirect */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
           </Routes>
-        </div>
       </Router>
     </AuthProvider>
   );
