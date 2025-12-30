@@ -1,9 +1,7 @@
-# Development tracking (not for commits)
-PROGRESS.md
-VISA_INTERVIEW_AI_SPEC.md
-README.md
+# Documentation (keep only README.md)
+*.md
+!README.md
 docs/
-API_CONTRACT.md
 
 # Dependencies
 node_modules/
