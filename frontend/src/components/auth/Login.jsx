@@ -70,16 +70,26 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{
+        backgroundImage: `
+          linear-gradient(to right, rgba(255, 122, 89, 0.05) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(255, 122, 89, 0.05) 1px, transparent 1px),
+          linear-gradient(135deg, #3D1F1F 0%, #4A2828 100%)
+        `,
+        backgroundSize: '60px 60px, 60px 60px, cover'
+      }}
+    >
       <div className="w-full max-w-md">
-        <div className="card">
+        <div className="bg-[#2E1616] border-2 border-[#5A3838] p-8 shadow-2xl">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
-            <p className="text-gray-600">Sign in to continue your interview practice</p>
+            <h1 className="text-3xl font-serif text-[#F5E6D3] mb-2">Welcome <span className="italic text-[#FF7A59]">Back</span></h1>
+            <p className="text-[#B39B8A]">Sign in to continue your interview practice</p>
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            <div className="mb-4 p-3 bg-[#FF7A59]/10 border-2 border-[#FF7A59] text-[#FF7A59] text-sm">
               {error}
             </div>
           )}
@@ -89,20 +99,20 @@ const Login = () => {
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+              <div className="w-full border-t border-[#5A3838]"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with email</span>
+              <span className="px-2 bg-[#2E1616] text-[#B39B8A]">Or continue with email</span>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Email</label>
+              <label className="block text-sm font-medium mb-1 text-[#F5E6D3]">Email</label>
               <input
                 type="email"
                 name="email"
-                className="input-field"
+                className="w-full px-4 py-2 bg-[#3D1F1F] border-2 border-[#5A3838] text-[#F5E6D3] placeholder-[#B39B8A] focus:outline-none focus:border-[#FF7A59]"
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="you@example.com"
@@ -111,11 +121,11 @@ const Login = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Password</label>
+              <label className="block text-sm font-medium mb-1 text-[#F5E6D3]">Password</label>
               <input
                 type="password"
                 name="password"
-                className="input-field"
+                className="w-full px-4 py-2 bg-[#3D1F1F] border-2 border-[#5A3838] text-[#F5E6D3] placeholder-[#B39B8A] focus:outline-none focus:border-[#FF7A59]"
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="Enter your password"
@@ -125,18 +135,18 @@ const Login = () => {
 
             <button
               type="submit"
-              className="btn-primary w-full"
+              className="w-full px-8 py-3 bg-[#FF7A59] text-white font-medium hover:bg-[#FF8C6B] transition-all duration-200 border-2 border-[#FF7A59] disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading || googleLoading}
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm">
+          <div className="mt-6 text-center text-sm text-[#B39B8A]">
             Don't have an account?{' '}
             <button
               onClick={() => navigate('/signup')}
-              className="text-primary hover:underline font-medium"
+              className="text-[#FF7A59] hover:text-[#FF8C6B] font-medium transition-colors"
             >
               Sign up
             </button>
