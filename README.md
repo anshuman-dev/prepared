@@ -1,95 +1,61 @@
-# US Visa Interview AI Practice
+# Prepared - US Visa Interview AI Practice
 
-AI-powered practice application for US visa interviews using ElevenLabs Conversational AI and Google Gemini.
+Practice your US visa interview with an AI-powered voice interviewer before the real thing.
 
-## Project Structure
+## Why This Exists
 
-```
-prepared/
-├── frontend/          # React PWA (Vite)
-├── backend/           # Node.js Express API
-├── shared/            # Shared types and constants
-└── docs/              # Documentation and diagrams
-```
+In 2024, over 11.5 million people applied for US visas. Over 3 million got denied - that's a 27% rejection rate. Rejected applicants wasted over $500 million in non-refundable visa fees alone.
 
-## Tech Stack
+The number one reason for denial? Section 214(b) - failure to demonstrate intent to return home.
 
-**Frontend:**
-- React 18 with Vite
-- TailwindCSS for styling
-- ElevenLabs React SDK for voice
-- React Router for navigation
-- Axios for API calls
+Here's the problem: qualified applicants with perfect paperwork get denied because they don't know how to present their case in a 3-minute voice interview. There's tons of misinformation out there, and people end up memorizing scripts that sound rehearsed.
 
-**Backend:**
-- Node.js with Express
-- Google Cloud Firestore (database)
-- Google Vertex AI (Gemini for AI)
-- ElevenLabs Conversational AI (voice)
-- JWT authentication
+**Prepared** gives you realistic voice practice with an AI consular officer so you can walk into your real interview confident and prepared.
 
-**Infrastructure:**
-- Google Cloud Run (backend hosting)
-- Cloud Storage (frontend hosting)
-- Firestore (database)
+---
 
-## Getting Started
+## Try It Live
 
-### Prerequisites
+**🌐 [prepared-99099.web.app](https://prepared-99099.web.app)**
 
-- Node.js 18+
-- Google Cloud Platform account
-- ElevenLabs API key
-- Firestore database
-- Vertex AI enabled
+---
 
-### Installation
+## How to Use
 
-1. Install frontend dependencies:
-```bash
-cd frontend
-npm install
-```
+1. **Sign up** with email or Google
+2. **Complete onboarding** - tell us your visa type, country, field of study/work
+3. **Start an interview** - talk naturally with the AI officer (voice only, no typing)
+4. **Get instant feedback** - see your approval likelihood, red flags, and specific recommendations
 
-2. Install backend dependencies:
-```bash
-cd backend
-npm install
-```
+![Landing Page](images/first.png)
 
-3. Configure environment variables:
-```bash
-cd backend
-cp .env.example .env
-# Edit .env with your credentials
-```
+![Interview in Progress](images/sec.png)
 
-4. Start development servers:
+![Results and Analysis](images/third.png)
 
-Frontend:
-```bash
-cd frontend
-npm run dev
-```
+---
 
-Backend:
-```bash
-cd backend
-npm run dev
-```
+## What It Does
 
-## Development
+- **Realistic voice interviews** with an AI consular officer
+- Opens with "Good morning, please give your passport" just like real interviews
+- Asks 3-8 questions based on your answers (2-4 minutes total)
+- Evaluates return intent, funding sources, and study/work plans
+- Gives immediate decisions: approved or denied with exact phrasing real officers use
+- Provides comprehensive analysis with approval likelihood, performance scores, and actionable feedback
 
-See PROGRESS.md for current development status and phase tracking.
+---
 
-## Features
+## Built With
 
-- Realistic AI-powered visa interview simulations
-- Two modes: Practice (with coaching) and Simulation (realistic)
-- Real-time red flag detection
-- Comprehensive post-interview analysis
-- Progress tracking across multiple sessions
-- Mobile-first Progressive Web App
+- **ElevenLabs Conversational AI** - Voice synthesis and speech-to-text
+- **Google Gemini 1.5 Flash** - AI interviewer responses
+- **Google Cloud Run** - Backend hosting
+- **Firebase** - Authentication and hosting
+- **Firestore** - Database
+- **React + TailwindCSS** - Frontend
+
+---
 
 ## License
 
