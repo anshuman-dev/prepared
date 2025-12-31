@@ -116,30 +116,42 @@ const Onboarding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center p-4 animate-fadeIn">
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{
+        backgroundImage: `
+          linear-gradient(to right, rgba(255, 122, 89, 0.05) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(255, 122, 89, 0.05) 1px, transparent 1px),
+          linear-gradient(135deg, #3D1F1F 0%, #4A2828 100%)
+        `,
+        backgroundSize: '60px 60px, 60px 60px, cover'
+      }}
+    >
       <div className="w-full max-w-md">
         {/* Progress Indicator */}
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-center mb-4">Complete Your Profile</h1>
-          <div className="flex justify-between mb-2">
-            <span className={`text-sm ${step >= 1 ? 'text-primary font-medium' : 'text-gray-400'}`}>
+          <h1 className="text-3xl font-serif text-center mb-6 text-[#F5E6D3]">
+            Complete Your <span className="italic text-[#FF7A59]">Profile</span>
+          </h1>
+          <div className="flex justify-between mb-3">
+            <span className={`text-sm font-medium ${step >= 1 ? 'text-[#FF7A59]' : 'text-[#B39B8A]'}`}>
               Visa Details
             </span>
-            <span className={`text-sm ${step >= 2 ? 'text-primary font-medium' : 'text-gray-400'}`}>
+            <span className={`text-sm font-medium ${step >= 2 ? 'text-[#FF7A59]' : 'text-[#B39B8A]'}`}>
               Your Profile
             </span>
           </div>
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-2 bg-[#5A3838] border-2 border-[#5A3838] overflow-hidden">
             <div
-              className="h-full bg-primary transition-all duration-300"
+              className="h-full bg-[#FF7A59] transition-all duration-300"
               style={{ width: `${(step / 2) * 100}%` }}
             />
           </div>
         </div>
 
-        <div className="card">
+        <div className="bg-[#2E1616] border-2 border-[#5A3838] p-8 shadow-2xl">
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            <div className="mb-6 p-4 bg-[#FF7A59]/10 border-2 border-[#FF7A59] text-[#FF7A59] text-sm">
               {error}
             </div>
           )}
@@ -147,32 +159,32 @@ const Onboarding = () => {
           <form onSubmit={handleSubmit}>
             {/* Step 1: Visa Details */}
             {step === 1 && (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Visa Type *</label>
+                  <label className="block text-sm font-medium mb-2 text-[#F5E6D3]">Visa Type *</label>
                   <select
-                    className="input-field"
+                    className="w-full px-4 py-3 bg-[#3D1F1F] border-2 border-[#5A3838] text-[#F5E6D3] focus:border-[#FF7A59] focus:outline-none transition-colors"
                     value={formData.visaType}
                     onChange={(e) => updateField('visaType', e.target.value)}
                   >
-                    <option value="">Select visa type</option>
+                    <option value="" className="bg-[#3D1F1F]">Select visa type</option>
                     {VISA_TYPES.map(visa => (
-                      <option key={visa.value} value={visa.value}>
+                      <option key={visa.value} value={visa.value} className="bg-[#3D1F1F]">
                         {visa.label}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Country of Origin *</label>
+                  <label className="block text-sm font-medium mb-2 text-[#F5E6D3]">Country of Origin *</label>
                   <select
-                    className="input-field"
+                    className="w-full px-4 py-3 bg-[#3D1F1F] border-2 border-[#5A3838] text-[#F5E6D3] focus:border-[#FF7A59] focus:outline-none transition-colors"
                     value={formData.country}
                     onChange={(e) => updateField('country', e.target.value)}
                   >
-                    <option value="">Select country</option>
+                    <option value="" className="bg-[#3D1F1F]">Select country</option>
                     {COUNTRIES.map(country => (
-                      <option key={country.value} value={country.value}>
+                      <option key={country.value} value={country.value} className="bg-[#3D1F1F]">
                         {country.label}
                       </option>
                     ))}
@@ -180,7 +192,7 @@ const Onboarding = () => {
                   {formData.country === 'Other' && (
                     <input
                       type="text"
-                      className="input-field mt-2"
+                      className="w-full px-4 py-3 bg-[#3D1F1F] border-2 border-[#5A3838] text-[#F5E6D3] placeholder-[#B39B8A] focus:border-[#FF7A59] focus:outline-none transition-colors mt-2"
                       value={formData.countryOther}
                       onChange={(e) => updateField('countryOther', e.target.value)}
                       placeholder="Enter your country"
@@ -188,20 +200,20 @@ const Onboarding = () => {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Interview Date (Optional)</label>
+                  <label className="block text-sm font-medium mb-2 text-[#F5E6D3]">Interview Date (Optional)</label>
                   <input
                     type="date"
-                    className="input-field"
+                    className="w-full px-4 py-3 bg-[#3D1F1F] border-2 border-[#5A3838] text-[#F5E6D3] focus:border-[#FF7A59] focus:outline-none transition-colors"
                     value={formData.interviewDate}
                     onChange={(e) => updateField('interviewDate', e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">
+                  <label className="block text-sm font-medium mb-3 text-[#F5E6D3]">
                     Have you had a US visa before?
                   </label>
-                  <div className="space-y-2">
-                    <label className="flex items-center">
+                  <div className="space-y-3">
+                    <label className="flex items-center cursor-pointer group">
                       <input
                         type="radio"
                         name="previousVisa"
@@ -210,47 +222,47 @@ const Onboarding = () => {
                           updateField('previousVisa', false);
                           updateField('previousApproval', null);
                         }}
-                        className="mr-2"
+                        className="mr-3 w-4 h-4 accent-[#FF7A59]"
                       />
-                      No
+                      <span className="text-[#B39B8A] group-hover:text-[#F5E6D3] transition-colors">No</span>
                     </label>
-                    <label className="flex items-center">
+                    <label className="flex items-center cursor-pointer group">
                       <input
                         type="radio"
                         name="previousVisa"
                         checked={formData.previousVisa === true}
                         onChange={() => updateField('previousVisa', true)}
-                        className="mr-2"
+                        className="mr-3 w-4 h-4 accent-[#FF7A59]"
                       />
-                      Yes
+                      <span className="text-[#B39B8A] group-hover:text-[#F5E6D3] transition-colors">Yes</span>
                     </label>
                   </div>
                 </div>
                 {formData.previousVisa && (
                   <div>
-                    <label className="block text-sm font-medium mb-2">
+                    <label className="block text-sm font-medium mb-3 text-[#F5E6D3]">
                       Was it approved?
                     </label>
-                    <div className="space-y-2">
-                      <label className="flex items-center">
+                    <div className="space-y-3">
+                      <label className="flex items-center cursor-pointer group">
                         <input
                           type="radio"
                           name="previousApproval"
                           checked={formData.previousApproval === true}
                           onChange={() => updateField('previousApproval', true)}
-                          className="mr-2"
+                          className="mr-3 w-4 h-4 accent-[#FF7A59]"
                         />
-                        Yes, it was approved
+                        <span className="text-[#B39B8A] group-hover:text-[#F5E6D3] transition-colors">Yes, it was approved</span>
                       </label>
-                      <label className="flex items-center">
+                      <label className="flex items-center cursor-pointer group">
                         <input
                           type="radio"
                           name="previousApproval"
                           checked={formData.previousApproval === false}
                           onChange={() => updateField('previousApproval', false)}
-                          className="mr-2"
+                          className="mr-3 w-4 h-4 accent-[#FF7A59]"
                         />
-                        No, it was denied
+                        <span className="text-[#B39B8A] group-hover:text-[#F5E6D3] transition-colors">No, it was denied</span>
                       </label>
                     </div>
                   </div>
@@ -260,19 +272,19 @@ const Onboarding = () => {
 
             {/* Step 2: Profile Details */}
             {step === 2 && (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Age Range *</label>
+                  <label className="block text-sm font-medium mb-2 text-[#F5E6D3]">Age Range *</label>
                   <select
-                    className="input-field"
+                    className="w-full px-4 py-3 bg-[#3D1F1F] border-2 border-[#5A3838] text-[#F5E6D3] focus:border-[#FF7A59] focus:outline-none transition-colors"
                     value={formData.age}
                     onChange={(e) => updateField('age', e.target.value)}
                   >
-                    <option value="">Select age range</option>
-                    <option value="20">18-22</option>
-                    <option value="25">23-27</option>
-                    <option value="31">28-35</option>
-                    <option value="40">36+</option>
+                    <option value="" className="bg-[#3D1F1F]">Select age range</option>
+                    <option value="20" className="bg-[#3D1F1F]">18-22</option>
+                    <option value="25" className="bg-[#3D1F1F]">23-27</option>
+                    <option value="31" className="bg-[#3D1F1F]">28-35</option>
+                    <option value="40" className="bg-[#3D1F1F]">36+</option>
                   </select>
                 </div>
 
@@ -280,15 +292,15 @@ const Onboarding = () => {
                 {formData.visaType === 'F-1' && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Field of Study *</label>
+                      <label className="block text-sm font-medium mb-2 text-[#F5E6D3]">Field of Study *</label>
                       <select
-                        className="input-field"
+                        className="w-full px-4 py-3 bg-[#3D1F1F] border-2 border-[#5A3838] text-[#F5E6D3] focus:border-[#FF7A59] focus:outline-none transition-colors"
                         value={formData.field}
                         onChange={(e) => updateField('field', e.target.value)}
                       >
-                        <option value="">Select field of study</option>
+                        <option value="" className="bg-[#3D1F1F]">Select field of study</option>
                         {FIELDS_OF_STUDY.map(field => (
-                          <option key={field.value} value={field.value}>
+                          <option key={field.value} value={field.value} className="bg-[#3D1F1F]">
                             {field.label}
                           </option>
                         ))}
@@ -296,7 +308,7 @@ const Onboarding = () => {
                       {formData.field === 'Other' && (
                         <input
                           type="text"
-                          className="input-field mt-2"
+                          className="w-full px-4 py-3 bg-[#3D1F1F] border-2 border-[#5A3838] text-[#F5E6D3] placeholder-[#B39B8A] focus:border-[#FF7A59] focus:outline-none transition-colors mt-2"
                           value={formData.fieldOther}
                           onChange={(e) => updateField('fieldOther', e.target.value)}
                           placeholder="Enter your field of study"
@@ -304,10 +316,10 @@ const Onboarding = () => {
                       )}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">University Name *</label>
+                      <label className="block text-sm font-medium mb-2 text-[#F5E6D3]">University Name *</label>
                       <input
                         type="text"
-                        className="input-field"
+                        className="w-full px-4 py-3 bg-[#3D1F1F] border-2 border-[#5A3838] text-[#F5E6D3] placeholder-[#B39B8A] focus:border-[#FF7A59] focus:outline-none transition-colors"
                         value={formData.university}
                         onChange={(e) => updateField('university', e.target.value)}
                         placeholder="e.g., MIT, Stanford"
@@ -319,20 +331,20 @@ const Onboarding = () => {
                 {(formData.visaType === 'H-1B' || formData.visaType === 'L-1') && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Job Title/Field *</label>
+                      <label className="block text-sm font-medium mb-2 text-[#F5E6D3]">Job Title/Field *</label>
                       <input
                         type="text"
-                        className="input-field"
+                        className="w-full px-4 py-3 bg-[#3D1F1F] border-2 border-[#5A3838] text-[#F5E6D3] placeholder-[#B39B8A] focus:border-[#FF7A59] focus:outline-none transition-colors"
                         value={formData.field}
                         onChange={(e) => updateField('field', e.target.value)}
                         placeholder="e.g., Software Engineer"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Company Name *</label>
+                      <label className="block text-sm font-medium mb-2 text-[#F5E6D3]">Company Name *</label>
                       <input
                         type="text"
-                        className="input-field"
+                        className="w-full px-4 py-3 bg-[#3D1F1F] border-2 border-[#5A3838] text-[#F5E6D3] placeholder-[#B39B8A] focus:border-[#FF7A59] focus:outline-none transition-colors"
                         value={formData.company}
                         onChange={(e) => updateField('company', e.target.value)}
                         placeholder="e.g., Google, Microsoft"
@@ -343,10 +355,10 @@ const Onboarding = () => {
 
                 {!['F-1', 'H-1B', 'L-1'].includes(formData.visaType) && (
                   <div>
-                    <label className="block text-sm font-medium mb-1">Field/Purpose *</label>
+                    <label className="block text-sm font-medium mb-2 text-[#F5E6D3]">Field/Purpose *</label>
                     <input
                       type="text"
-                      className="input-field"
+                      className="w-full px-4 py-3 bg-[#3D1F1F] border-2 border-[#5A3838] text-[#F5E6D3] placeholder-[#B39B8A] focus:border-[#FF7A59] focus:outline-none transition-colors"
                       value={formData.field}
                       onChange={(e) => updateField('field', e.target.value)}
                       placeholder="Describe your purpose/field"
@@ -355,23 +367,23 @@ const Onboarding = () => {
                 )}
 
                 <div>
-                  <label className="flex items-center">
+                  <label className="flex items-center cursor-pointer group">
                     <input
                       type="checkbox"
                       checked={formData.hasRelativesInUS}
                       onChange={(e) => updateField('hasRelativesInUS', e.target.checked)}
-                      className="mr-2"
+                      className="mr-3 w-4 h-4 accent-[#FF7A59]"
                     />
-                    <span className="text-sm">I have relatives in the US</span>
+                    <span className="text-sm text-[#B39B8A] group-hover:text-[#F5E6D3] transition-colors">I have relatives in the US</span>
                   </label>
                 </div>
 
                 {formData.hasRelativesInUS && (
                   <div>
-                    <label className="block text-sm font-medium mb-1">Their Visa Status</label>
+                    <label className="block text-sm font-medium mb-2 text-[#F5E6D3]">Their Visa Status</label>
                     <input
                       type="text"
-                      className="input-field"
+                      className="w-full px-4 py-3 bg-[#3D1F1F] border-2 border-[#5A3838] text-[#F5E6D3] placeholder-[#B39B8A] focus:border-[#FF7A59] focus:outline-none transition-colors"
                       value={formData.relativesVisaStatus}
                       onChange={(e) => updateField('relativesVisaStatus', e.target.value)}
                       placeholder="e.g., H-1B, Green Card, Citizen"
@@ -382,12 +394,12 @@ const Onboarding = () => {
             )}
 
             {/* Navigation Buttons */}
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-4 mt-8">
               {step > 1 && (
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="btn-secondary flex-1"
+                  className="flex-1 px-6 py-3 bg-transparent text-[#F5E6D3] font-medium hover:bg-[#F5E6D3]/10 transition-all duration-200 border-2 border-[#F5E6D3] hover:border-[#F5E6D3] disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 >
                   Back
@@ -397,14 +409,14 @@ const Onboarding = () => {
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="btn-primary flex-1"
+                  className="flex-1 px-6 py-3 bg-[#FF7A59] text-white font-medium hover:bg-[#FF8C6B] transition-all duration-200 border-2 border-[#FF7A59]"
                 >
                   Next
                 </button>
               ) : (
                 <button
                   type="submit"
-                  className="btn-primary flex-1"
+                  className="flex-1 px-6 py-3 bg-[#FF7A59] text-white font-medium hover:bg-[#FF8C6B] transition-all duration-200 border-2 border-[#FF7A59] disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 >
                   {loading ? 'Saving...' : 'Complete Profile'}

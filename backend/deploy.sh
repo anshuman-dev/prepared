@@ -48,7 +48,7 @@ gcloud run deploy ${SERVICE_NAME} \
   --set-env-vars "JWT_SECRET=production-secret-key-change-this" \
   --set-env-vars "JWT_EXPIRATION=7d" \
   --set-env-vars "FRONTEND_URL=https://prepared-99099.web.app" \
-  --set-env-vars "BACKEND_URL=https://prepared-backend-2obppo24sa-uc.a.run.app" \
+  --set-env-vars "BACKEND_URL=https://prepared-backend-967272374922.us-central1.run.app" \
   --project ${PROJECT_ID}
 
 echo ""
