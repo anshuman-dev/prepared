@@ -30,17 +30,6 @@ const PORT = process.env.PORT || 8080;
 
 // Security middleware
 app.use(helmet());
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3001',
-  credentials: true
-}));
-
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
-});
-app.use('/api/', limiter);
 
 // Body parsing
 app.use(express.json());
@@ -56,13 +45,26 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Public routes (no auth required) - MUST come before global CORS to use route-specific CORS
+app.use('/', chatCompletionsRoutes); // OpenAI-compatible endpoint for ElevenLabs (has its own CORS config)
+
+// CORS for /api routes only (stricter)
+app.use('/api/*', cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+  credentials: true
+}));
+
+// Rate limiting for API routes
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use('/api/', limiter);
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/interview', interviewRoutes);
 app.use('/api/user', userRoutes);
-
-// Public routes (no auth required)
-app.use('/', chatCompletionsRoutes); // OpenAI-compatible endpoint for ElevenLabs
 
 // 404 handler
 app.use('*', notFoundHandler);

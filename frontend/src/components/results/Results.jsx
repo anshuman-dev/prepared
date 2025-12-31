@@ -50,10 +50,20 @@ const Results = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center">
-        <div className="card text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-primary mb-4"></div>
-          <p className="text-gray-600">Loading results...</p>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(255, 122, 89, 0.05) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255, 122, 89, 0.05) 1px, transparent 1px),
+            linear-gradient(135deg, #3D1F1F 0%, #4A2828 100%)
+          `,
+          backgroundSize: '60px 60px, 60px 60px, cover'
+        }}
+      >
+        <div className="bg-[#2E1616] border-2 border-[#5A3838] p-12 shadow-2xl text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-[#5A3838] border-t-[#FF7A59] mb-4"></div>
+          <p className="text-[#B39B8A]">Loading results...</p>
         </div>
       </div>
     );
@@ -61,12 +71,22 @@ const Results = () => {
 
   if (!analysis) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center">
-        <div className="card text-center">
-          <p className="text-gray-600">No analysis available</p>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(255, 122, 89, 0.05) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255, 122, 89, 0.05) 1px, transparent 1px),
+            linear-gradient(135deg, #3D1F1F 0%, #4A2828 100%)
+          `,
+          backgroundSize: '60px 60px, 60px 60px, cover'
+        }}
+      >
+        <div className="bg-[#2E1616] border-2 border-[#5A3838] p-12 shadow-2xl text-center">
+          <p className="text-[#B39B8A] mb-4">No analysis available</p>
           <button
             onClick={() => navigate('/dashboard')}
-            className="btn-primary mt-4"
+            className="px-6 py-3 bg-[#FF7A59] text-white font-medium hover:bg-[#FF8C6B] transition-all duration-200 border-2 border-[#FF7A59]"
           >
             Back to Dashboard
           </button>
@@ -76,66 +96,72 @@ const Results = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 p-4 animate-fadeIn">
+    <div
+      className="min-h-screen p-8"
+      style={{
+        backgroundImage: `
+          linear-gradient(to right, rgba(255, 122, 89, 0.05) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(255, 122, 89, 0.05) 1px, transparent 1px),
+          linear-gradient(135deg, #3D1F1F 0%, #4A2828 100%)
+        `,
+        backgroundSize: '60px 60px, 60px 60px, cover'
+      }}
+    >
       <div className="max-w-5xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Interview Analysis</h1>
-          <p className="text-gray-600">Comprehensive feedback on your performance</p>
+        <div className="mb-8">
+          <h1 className="text-4xl font-serif text-[#F5E6D3] mb-2">
+            Interview <span className="italic text-[#FF7A59]">Analysis</span>
+          </h1>
+          <p className="text-[#B39B8A]">Comprehensive feedback on your performance</p>
         </div>
 
-        {/* Overall Score Card */}
-        <div className="card bg-gradient-to-br from-blue-50 to-white border-2 border-blue-200 mb-6">
-          <div className="grid md:grid-cols-3 gap-6">
+        {/* Key Metrics Card */}
+        <div className="bg-[#2E1616] border-2 border-[#5A3838] p-8 shadow-2xl mb-6">
+          <div className="grid md:grid-cols-2 gap-8">
             <div className="text-center">
-              <div className={`text-6xl font-bold mb-2 ${getScoreColor(analysis.overallScore)}`}>
-                {analysis.overallScore.toFixed(1)}
-              </div>
-              <div className="text-gray-600">Overall Score</div>
-            </div>
-            <div className="text-center">
-              <div className="text-6xl font-bold mb-2 text-blue-600">
+              <div className="text-6xl font-bold mb-2 text-[#FF7A59]">
                 {analysis.approvalLikelihood}%
               </div>
-              <div className="text-gray-600">Approval Likelihood</div>
+              <div className="text-[#B39B8A]">Approval Likelihood</div>
             </div>
             <div className="text-center">
-              <div className={`inline-block px-4 py-2 rounded-full text-xl font-bold mb-2 ${getOutcomeColor(analysis.likelyOutcome)}`}>
+              <div className={`inline-block px-6 py-3 border-2 text-xl font-bold mb-2 ${
+                analysis.likelyOutcome.toLowerCase() === 'approved'
+                  ? 'text-[#F5E6D3] border-[#F5E6D3]'
+                  : 'text-[#FF7A59] border-[#FF7A59]'
+              }`}>
                 {analysis.likelyOutcome.toUpperCase()}
               </div>
-              <div className="text-gray-600">Likely Outcome</div>
+              <div className="text-[#B39B8A]">Likely Outcome</div>
             </div>
           </div>
           {analysis.keyFactor && (
-            <div className="mt-6 pt-6 border-t border-blue-200">
-              <p className="text-center text-gray-700">
-                <span className="font-semibold">Key Factor:</span> {analysis.keyFactor}
+            <div className="mt-6 pt-6 border-t border-[#5A3838]">
+              <p className="text-center text-[#B39B8A]">
+                <span className="font-semibold text-[#F5E6D3]">Key Factor:</span> {analysis.keyFactor}
               </p>
             </div>
           )}
         </div>
 
         {/* Detailed Scores */}
-        <div className="card mb-6">
-          <h2 className="text-2xl font-bold mb-4">Performance Breakdown</h2>
+        <div className="bg-[#2E1616] border-2 border-[#5A3838] p-8 shadow-2xl mb-6">
+          <h2 className="text-2xl font-serif text-[#F5E6D3] mb-6">Performance Breakdown</h2>
           <div className="space-y-4">
             {Object.entries(analysis.scores).map(([key, value]) => (
               <div key={key}>
                 <div className="flex justify-between mb-2">
-                  <span className="font-medium capitalize">
+                  <span className="font-medium text-[#F5E6D3] capitalize">
                     {key.replace(/([A-Z])/g, ' $1').trim()}
                   </span>
-                  <span className={`font-bold ${getScoreColor(value)}`}>
+                  <span className="font-bold text-[#FF7A59]">
                     {value}/10
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
+                <div className="w-full bg-[#5A3838] h-3 border border-[#5A3838]">
                   <div
-                    className={`h-3 rounded-full transition-all ${
-                      value >= 8 ? 'bg-green-500' :
-                      value >= 6 ? 'bg-yellow-500' :
-                      'bg-red-500'
-                    }`}
+                    className="h-full bg-[#FF7A59] transition-all"
                     style={{ width: `${value * 10}%` }}
                   />
                 </div>
@@ -146,69 +172,95 @@ const Results = () => {
 
         <div className="grid md:grid-cols-2 gap-6 mb-6">
           {/* Strengths */}
-          <div className="card bg-green-50">
-            <h2 className="text-xl font-bold mb-4 text-green-900">Strengths</h2>
+          <div className="bg-[#2E1616] border-2 border-[#F5E6D3]/30 p-6 shadow-2xl">
+            <h2 className="text-xl font-serif text-[#F5E6D3] mb-4">Strengths</h2>
             {analysis.strengths && analysis.strengths.length > 0 ? (
               <ul className="space-y-2">
                 {analysis.strengths.map((strength, index) => (
                   <li key={index} className="flex items-start">
-                    <span className="text-green-600 mr-2">✓</span>
-                    <span className="text-gray-700">{strength}</span>
+                    <span className="text-[#F5E6D3] mr-2">✓</span>
+                    <span className="text-[#B39B8A]">{strength}</span>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-gray-600">No specific strengths identified</p>
+              <p className="text-[#B39B8A]">No specific strengths identified</p>
             )}
           </div>
 
           {/* Red Flags */}
-          <div className="card bg-red-50">
-            <h2 className="text-xl font-bold mb-4 text-red-900">Red Flags</h2>
+          <div className="bg-[#2E1616] border-2 border-[#FF7A59]/30 p-6 shadow-2xl">
+            <h2 className="text-xl font-serif text-[#F5E6D3] mb-4">Red Flags</h2>
             {analysis.redFlags && analysis.redFlags.length > 0 ? (
               <ul className="space-y-3">
                 {analysis.redFlags.map((flag, index) => (
-                  <li key={index} className="border-l-4 border-red-400 pl-3">
-                    <div className="font-medium text-red-900">{flag.type}</div>
-                    <div className="text-sm text-gray-700">{flag.explanation}</div>
+                  <li key={index} className="border-l-4 border-[#FF7A59] pl-3">
+                    <div className="font-medium text-[#FF7A59]">{flag.type}</div>
+                    <div className="text-sm text-[#B39B8A]">{flag.explanation}</div>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-gray-600">No red flags detected! Great job!</p>
+              <p className="text-[#B39B8A]">No red flags detected! Great job!</p>
             )}
           </div>
         </div>
 
-        {/* Recommendations */}
-        <div className="card mb-6">
-          <h2 className="text-2xl font-bold mb-4">Recommendations</h2>
-          {analysis.recommendations && analysis.recommendations.length > 0 ? (
-            <ul className="space-y-3">
-              {analysis.recommendations.map((rec, index) => (
-                <li key={index} className="flex items-start">
-                  <span className="text-primary mr-3 mt-1">→</span>
-                  <span className="text-gray-700">{rec}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-600">No specific recommendations</p>
+        {/* Recommendations & Areas for Improvement - Combined */}
+        <div className="bg-[#2E1616] border-2 border-[#5A3838] p-8 shadow-2xl mb-6">
+          <h2 className="text-2xl font-serif text-[#F5E6D3] mb-6">Recommendations & Areas for Improvement</h2>
+
+          {/* General Recommendations */}
+          {analysis.recommendations && analysis.recommendations.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-lg font-medium text-[#FF7A59] mb-3">Key Recommendations</h3>
+              <ul className="space-y-3">
+                {analysis.recommendations.map((rec, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="text-[#FF7A59] mr-3 mt-1">→</span>
+                    <span className="text-[#B39B8A]">{rec}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Specific Answer Improvements */}
+          {analysis.weakAnswersAnalysis && analysis.weakAnswersAnalysis.length > 0 && (
+            <div>
+              <h3 className="text-lg font-medium text-[#FF7A59] mb-3">Specific Answer Improvements</h3>
+              <div className="space-y-4">
+                {analysis.weakAnswersAnalysis.map((item, index) => (
+                  <div key={index} className="border-l-4 border-[#FF7A59] pl-4 py-2">
+                    <div className="text-sm text-[#B39B8A] mb-2">
+                      <span className="font-medium text-[#F5E6D3]">Your answer:</span> {item.answer}
+                    </div>
+                    <div className="text-sm text-[#B39B8A]">
+                      <span className="font-medium text-[#F5E6D3]">Improvement:</span> {item.suggestion}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!analysis.recommendations?.length && !analysis.weakAnswersAnalysis?.length && (
+            <p className="text-[#B39B8A]">Great job! No specific recommendations at this time.</p>
           )}
         </div>
 
         {/* Next Steps */}
-        <div className="card bg-blue-50 mb-6">
+        <div className="bg-[#2E1616] border-2 border-[#5A3838] p-8 shadow-2xl mb-6">
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <h3 className="font-bold text-gray-900 mb-2">Next Focus</h3>
-              <p className="text-gray-700">{analysis.nextFocus || 'Keep practicing!'}</p>
+              <h3 className="font-serif text-[#F5E6D3] mb-2">Next Focus</h3>
+              <p className="text-[#B39B8A]">{analysis.nextFocus || 'Keep practicing!'}</p>
             </div>
             <div>
-              <h3 className="font-bold text-gray-900 mb-2">Ready for Real Interview?</h3>
-              <p className="text-gray-700">
+              <h3 className="font-serif text-[#F5E6D3] mb-2">Ready for Real Interview?</h3>
+              <p className="text-[#B39B8A]">
                 {analysis.readyForRealInterview ? (
-                  <span className="text-green-700 font-semibold">Yes! You're ready.</span>
+                  <span className="text-[#F5E6D3] font-semibold">Yes! You're ready.</span>
                 ) : (
                   <>
                     Not yet. {analysis.whatsMissing}
@@ -223,41 +275,21 @@ const Results = () => {
           </div>
         </div>
 
-        {/* Weak Answers Analysis */}
-        {analysis.weakAnswersAnalysis && analysis.weakAnswersAnalysis.length > 0 && (
-          <div className="card mb-6">
-            <h2 className="text-2xl font-bold mb-4">Areas for Improvement</h2>
-            <div className="space-y-4">
-              {analysis.weakAnswersAnalysis.map((item, index) => (
-                <div key={index} className="border-l-4 border-yellow-400 pl-4">
-                  <div className="font-medium text-gray-900 mb-1">{item.question}</div>
-                  <div className="text-sm text-gray-700 mb-2">
-                    <span className="font-medium">Your answer:</span> {item.answer}
-                  </div>
-                  <div className="text-sm text-gray-700">
-                    <span className="font-medium">Improvement:</span> {item.suggestion}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Transcript */}
         {session?.transcript && session.transcript.length > 0 && (
-          <div className="card mb-6">
-            <h2 className="text-2xl font-bold mb-4">Full Transcript</h2>
+          <div className="bg-[#2E1616] border-2 border-[#5A3838] p-8 shadow-2xl mb-6">
+            <h2 className="text-2xl font-serif text-[#F5E6D3] mb-6">Full Transcript</h2>
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {session.transcript.map((msg, index) => (
                 <div
                   key={index}
-                  className={`p-3 rounded-lg ${
+                  className={`p-4 border-2 ${
                     msg.speaker === 'officer'
-                      ? 'bg-blue-50 text-blue-900'
-                      : 'bg-gray-100 text-gray-900'
+                      ? 'bg-[#FF7A59]/10 border-[#FF7A59] text-[#F5E6D3]'
+                      : 'bg-[#F5E6D3]/10 border-[#F5E6D3] text-[#F5E6D3]'
                   }`}
                 >
-                  <div className="font-medium text-sm mb-1">
+                  <div className="font-medium text-sm mb-1 opacity-70">
                     {msg.speaker === 'officer' ? 'Officer' : 'You'}
                   </div>
                   <div className="text-sm">{msg.text}</div>
@@ -271,13 +303,13 @@ const Results = () => {
         <div className="flex gap-4 justify-center">
           <button
             onClick={() => navigate('/dashboard')}
-            className="btn-secondary"
+            className="px-8 py-3 bg-transparent text-[#F5E6D3] font-medium hover:bg-[#F5E6D3]/10 transition-all duration-200 border-2 border-[#F5E6D3]"
           >
             Back to Dashboard
           </button>
           <button
             onClick={() => navigate('/dashboard')}
-            className="btn-primary"
+            className="px-8 py-3 bg-[#FF7A59] text-white font-medium hover:bg-[#FF8C6B] transition-all duration-200 border-2 border-[#FF7A59]"
           >
             Practice Again
           </button>

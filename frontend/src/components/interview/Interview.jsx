@@ -19,6 +19,7 @@ const Interview = () => {
   const timerRef = useRef(null);
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
+  const isSpeakingRef = useRef(false);
 
   // ElevenLabs conversation hook
   const conversation = useConversation({
@@ -64,15 +65,17 @@ const Interview = () => {
     },
     onModeChange: (modeChange) => {
       console.log('Mode change:', modeChange);
-      // Track when user is speaking vs AI is speaking
+      // When agent switches to speaking mode, clear user listening state
       if (modeChange.mode === 'speaking') {
-        setIsListening(true);
-        setIsSpeaking(false);
-      } else if (modeChange.mode === 'listening') {
         setIsListening(false);
       }
     }
   });
+
+  // Keep ref in sync with state for use in detectSpeech loop
+  useEffect(() => {
+    isSpeakingRef.current = isSpeaking;
+  }, [isSpeaking]);
 
   useEffect(() => {
     if (!sessionId || !agentConfig) {
@@ -80,11 +83,48 @@ const Interview = () => {
       return;
     }
 
-    // Check microphone permissions
+    // Check microphone permissions and setup audio monitoring
     navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(() => {
+      .then((stream) => {
         setMicPermission('granted');
         console.log('✅ Microphone access granted');
+
+        // Setup audio context for voice detection
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const analyser = audioContext.createAnalyser();
+        const microphone = audioContext.createMediaStreamSource(stream);
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+        analyser.smoothingTimeConstant = 0.8;
+        analyser.fftSize = 1024;
+        microphone.connect(analyser);
+
+        audioContextRef.current = audioContext;
+        analyserRef.current = analyser;
+
+        // Monitor audio levels to detect when user is speaking
+        const detectSpeech = () => {
+          if (!analyserRef.current) return;
+
+          analyserRef.current.getByteFrequencyData(dataArray);
+          const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+
+          // If audio level is above threshold and AI is not speaking, user is speaking
+          if (average > 20 && !isSpeakingRef.current) {
+            setIsListening(true);
+          } else if (average <= 15) {
+            // Small delay before stopping listening indicator
+            setTimeout(() => {
+              if (!isSpeakingRef.current) {
+                setIsListening(false);
+              }
+            }, 500);
+          }
+
+          requestAnimationFrame(detectSpeech);
+        };
+
+        detectSpeech();
       })
       .catch((err) => {
         setMicPermission('denied');
@@ -101,6 +141,9 @@ const Interview = () => {
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
       }
       conversation.endSession();
     };
@@ -137,13 +180,25 @@ const Interview = () => {
 
   if (isAnalyzing) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center">
-        <div className="card text-center max-w-md">
-          <div className="mb-4">
-            <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-primary"></div>
+      <div
+        className="min-h-screen flex items-center justify-center relative"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(255, 122, 89, 0.05) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255, 122, 89, 0.05) 1px, transparent 1px),
+            linear-gradient(135deg, #3D1F1F 0%, #4A2828 100%)
+          `,
+          backgroundSize: '60px 60px, 60px 60px, cover'
+        }}
+      >
+        <div className="bg-[#2E1616] border-2 border-[#5A3838] p-12 shadow-2xl text-center max-w-md">
+          <div className="mb-6">
+            <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-[#5A3838] border-t-[#FF7A59]"></div>
           </div>
-          <h2 className="text-2xl font-bold mb-2">Analyzing Your Interview</h2>
-          <p className="text-gray-600">
+          <h2 className="text-2xl font-serif text-[#F5E6D3] mb-3">
+            Analyzing Your <span className="italic text-[#FF7A59]">Interview</span>
+          </h2>
+          <p className="text-[#B39B8A]">
             Our AI is reviewing your responses and generating detailed feedback...
           </p>
         </div>
@@ -152,22 +207,32 @@ const Interview = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 p-4">
-      <div className="max-w-4xl mx-auto">
+    <div
+      className="min-h-screen p-8 relative"
+      style={{
+        backgroundImage: `
+          linear-gradient(to right, rgba(255, 122, 89, 0.05) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(255, 122, 89, 0.05) 1px, transparent 1px),
+          linear-gradient(135deg, #3D1F1F 0%, #4A2828 100%)
+        `,
+        backgroundSize: '60px 60px, 60px 60px, cover'
+      }}
+    >
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-6 flex justify-between items-center">
+        <div className="mb-8 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {mode === INTERVIEW_MODES.PRACTICE ? 'Practice' : 'Simulation'} Interview
+            <h1 className="text-3xl font-serif text-[#F5E6D3]">
+              {mode === INTERVIEW_MODES.PRACTICE ? 'Practice' : 'Simulation'} <span className="italic text-[#FF7A59]">Interview</span>
             </h1>
-            <p className="text-gray-600 text-sm mt-1">
+            <p className="text-[#B39B8A] mt-1">
               Duration: {formatDuration(duration)}
             </p>
           </div>
           <button
             onClick={handleEndInterview}
             disabled={conversation.status === 'disconnected'}
-            className="px-6 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
+            className="px-6 py-2 bg-[#FF7A59] text-white font-medium hover:bg-[#FF8C6B] transition-colors border-2 border-[#FF7A59] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             End Interview
           </button>
@@ -175,26 +240,26 @@ const Interview = () => {
 
         {/* Red Flag Alert (Practice Mode) */}
         {redFlag && mode === INTERVIEW_MODES.PRACTICE && (
-          <div className="mb-6 card bg-yellow-50 border-2 border-yellow-400 animate-fadeIn">
+          <div className="mb-6 bg-[#FF7A59]/10 border-2 border-[#FF7A59] p-6">
             <div className="flex justify-between items-start">
               <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-3 mb-3">
                   <span className="text-2xl">⚠️</span>
-                  <h3 className="text-lg font-bold text-yellow-900">
-                    Red Flag Detected: {redFlag.type.replace('_', ' ').toUpperCase()}
+                  <h3 className="text-lg font-serif text-[#F5E6D3]">
+                    Red Flag: {redFlag.type.replace('_', ' ').toUpperCase()}
                   </h3>
                 </div>
-                <p className="text-yellow-900 mb-2">
-                  <span className="font-medium">Issue:</span> {redFlag.explanation}
+                <p className="text-[#B39B8A] mb-2">
+                  <span className="font-medium text-[#F5E6D3]">Issue:</span> {redFlag.explanation}
                 </p>
-                <p className="text-yellow-900">
-                  <span className="font-medium">Suggestion:</span> {redFlag.suggestion}
+                <p className="text-[#B39B8A]">
+                  <span className="font-medium text-[#F5E6D3]">Suggestion:</span> {redFlag.suggestion}
                 </p>
-                <div className="mt-2">
-                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                    redFlag.severity === 'high' ? 'bg-red-100 text-red-800' :
-                    redFlag.severity === 'medium' ? 'bg-orange-100 text-orange-800' :
-                    'bg-yellow-100 text-yellow-800'
+                <div className="mt-3">
+                  <span className={`inline-block px-3 py-1 border-2 text-xs font-medium ${
+                    redFlag.severity === 'high' ? 'bg-[#FF7A59]/20 text-[#FF7A59] border-[#FF7A59]' :
+                    redFlag.severity === 'medium' ? 'bg-[#FF8C6B]/20 text-[#FF8C6B] border-[#FF8C6B]' :
+                    'bg-[#F5E6D3]/20 text-[#F5E6D3] border-[#F5E6D3]'
                   }`}>
                     {redFlag.severity.toUpperCase()} SEVERITY
                   </span>
@@ -202,7 +267,7 @@ const Interview = () => {
               </div>
               <button
                 onClick={dismissRedFlag}
-                className="text-yellow-600 hover:text-yellow-900 ml-4"
+                className="text-[#FF7A59] hover:text-[#FF8C6B] ml-4 text-xl"
               >
                 ✕
               </button>
@@ -213,8 +278,8 @@ const Interview = () => {
         {/* Interview Container */}
         <div className="grid md:grid-cols-2 gap-6">
           {/* Voice Interface */}
-          <div className="card">
-            <h2 className="text-xl font-bold mb-4">Voice Interview</h2>
+          <div className="bg-[#2E1616] border-2 border-[#5A3838] p-6 shadow-2xl">
+            <h2 className="text-xl font-serif text-[#F5E6D3] mb-6">Voice Interview</h2>
 
             <div className="mb-6">
               <div className="flex justify-center mb-4">
@@ -223,41 +288,41 @@ const Interview = () => {
                     {/* Audio Visualization */}
                     <div className="relative w-48 h-48 flex items-center justify-center">
                       {/* Outer ring - always visible */}
-                      <div className="absolute inset-0 w-48 h-48 rounded-full border-4 border-primary opacity-20"></div>
+                      <div className="absolute inset-0 w-48 h-48 rounded-full border-4 border-[#FF7A59] opacity-20"></div>
 
                       {/* Animated waves when speaking */}
                       {isSpeaking && (
                         <>
-                          <div className="absolute inset-0 w-48 h-48 rounded-full bg-blue-500 opacity-20 animate-ping"></div>
-                          <div className="absolute inset-4 w-40 h-40 rounded-full bg-blue-500 opacity-30 animate-pulse"></div>
-                          <div className="absolute inset-8 w-32 h-32 rounded-full bg-blue-500 opacity-40 animate-ping" style={{ animationDelay: '0.2s' }}></div>
+                          <div className="absolute inset-0 w-48 h-48 rounded-full bg-[#FF7A59] opacity-20 animate-ping"></div>
+                          <div className="absolute inset-4 w-40 h-40 rounded-full bg-[#FF7A59] opacity-30 animate-pulse"></div>
+                          <div className="absolute inset-8 w-32 h-32 rounded-full bg-[#FF7A59] opacity-40 animate-ping" style={{ animationDelay: '0.2s' }}></div>
                         </>
                       )}
 
                       {/* Animated waves when user is speaking */}
                       {isListening && (
                         <>
-                          <div className="absolute inset-0 w-48 h-48 rounded-full bg-green-500 opacity-20 animate-ping"></div>
-                          <div className="absolute inset-4 w-40 h-40 rounded-full bg-green-500 opacity-30 animate-pulse"></div>
-                          <div className="absolute inset-8 w-32 h-32 rounded-full bg-green-500 opacity-40 animate-ping" style={{ animationDelay: '0.2s' }}></div>
+                          <div className="absolute inset-0 w-48 h-48 rounded-full bg-[#F5E6D3] opacity-20 animate-ping"></div>
+                          <div className="absolute inset-4 w-40 h-40 rounded-full bg-[#F5E6D3] opacity-30 animate-pulse"></div>
+                          <div className="absolute inset-8 w-32 h-32 rounded-full bg-[#F5E6D3] opacity-40 animate-ping" style={{ animationDelay: '0.2s' }}></div>
                         </>
                       )}
 
                       {/* Center icon */}
                       <div className={`relative z-10 w-24 h-24 rounded-full flex items-center justify-center text-4xl transition-all duration-300 ${
-                        isSpeaking ? 'bg-blue-500 scale-110' :
-                        isListening ? 'bg-green-500 scale-110' :
-                        'bg-gray-400'
+                        isSpeaking ? 'bg-[#FF7A59] scale-110' :
+                        isListening ? 'bg-[#F5E6D3] scale-110' :
+                        'bg-[#5A3838]'
                       }`}>
                         {isSpeaking ? '🎙️' : isListening ? '👂' : '🎤'}
                       </div>
                     </div>
 
                     {/* Status text */}
-                    <p className={`text-center font-semibold mt-4 transition-colors duration-300 ${
-                      isSpeaking ? 'text-blue-600' :
-                      isListening ? 'text-green-600' :
-                      'text-gray-600'
+                    <p className={`text-center font-medium mt-4 transition-colors duration-300 ${
+                      isSpeaking ? 'text-[#FF7A59]' :
+                      isListening ? 'text-[#F5E6D3]' :
+                      'text-[#B39B8A]'
                     }`}>
                       {isSpeaking ? '🔊 Interviewer Speaking...' :
                        isListening ? '🎤 You are Speaking...' :
@@ -266,11 +331,11 @@ const Interview = () => {
                   </div>
                 ) : conversation.status === 'connecting' ? (
                   <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-primary mb-4"></div>
-                    <p className="text-gray-600">Connecting to interviewer...</p>
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-[#5A3838] border-t-[#FF7A59] mb-4"></div>
+                    <p className="text-[#B39B8A]">Connecting to interviewer...</p>
                   </div>
                 ) : (
-                  <div className="w-32 h-32 rounded-full bg-gray-300 flex items-center justify-center">
+                  <div className="w-32 h-32 rounded-full bg-[#5A3838] flex items-center justify-center">
                     <span className="text-4xl">🎤</span>
                   </div>
                 )}
@@ -278,12 +343,12 @@ const Interview = () => {
             </div>
 
             {/* Status Info */}
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <h3 className="font-medium text-gray-900 mb-2">💡 Interview Tips:</h3>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• <strong>Wait for blue waves to stop</strong> before speaking</li>
-                <li>• <strong>Speak clearly and at normal volume</strong></li>
-                <li>• Green waves = your microphone is active</li>
+            <div className="mt-6 p-4 bg-[#3D1F1F] border border-[#5A3838]">
+              <h3 className="font-medium text-[#F5E6D3] mb-3">💡 Interview Tips:</h3>
+              <ul className="text-sm text-[#B39B8A] space-y-2">
+                <li>• Wait for orange waves to stop before speaking</li>
+                <li>• Speak clearly at normal volume</li>
+                <li>• Cream waves = your microphone is active</li>
                 <li>• Be specific in your answers</li>
                 {mode === INTERVIEW_MODES.PRACTICE && (
                   <li>• Watch for red flag alerts above</li>
@@ -293,18 +358,18 @@ const Interview = () => {
 
             {/* Microphone Status */}
             {conversation.status === 'connected' && (
-              <div className={`mt-4 p-3 rounded-lg ${
-                micPermission === 'granted' ? 'bg-green-50 border border-green-200' :
-                micPermission === 'denied' ? 'bg-red-50 border border-red-200' :
-                'bg-yellow-50 border border-yellow-200'
+              <div className={`mt-4 p-3 border-2 ${
+                micPermission === 'granted' ? 'bg-[#F5E6D3]/10 border-[#F5E6D3]' :
+                micPermission === 'denied' ? 'bg-[#FF7A59]/10 border-[#FF7A59]' :
+                'bg-[#B39B8A]/10 border-[#B39B8A]'
               }`}>
                 <p className={`text-sm ${
-                  micPermission === 'granted' ? 'text-green-800' :
-                  micPermission === 'denied' ? 'text-red-800' :
-                  'text-yellow-800'
+                  micPermission === 'granted' ? 'text-[#F5E6D3]' :
+                  micPermission === 'denied' ? 'text-[#FF7A59]' :
+                  'text-[#B39B8A]'
                 }`}>
                   {micPermission === 'granted' ? (
-                    <>🎤 <strong>Microphone Active</strong> - Speak at normal volume when you see green waves</>
+                    <>🎤 <strong>Microphone Active</strong> - Speak at normal volume when you see cream waves</>
                   ) : micPermission === 'denied' ? (
                     <>❌ <strong>Microphone Blocked</strong> - Please allow microphone access in browser settings</>
                   ) : (
@@ -316,33 +381,33 @@ const Interview = () => {
 
             {/* Speech Detection Help */}
             {conversation.status === 'connected' && !isListening && !isSpeaking && (
-              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-300 rounded-lg">
-                <p className="text-sm text-yellow-800">
-                  💡 <strong>Not hearing you?</strong> Speak louder and wait for green waves to confirm the mic is picking up your voice.
+              <div className="mt-4 p-3 bg-[#FF7A59]/10 border-2 border-[#FF7A59]">
+                <p className="text-sm text-[#B39B8A]">
+                  💡 <strong className="text-[#F5E6D3]">Not hearing you?</strong> Speak louder and wait for cream waves to confirm.
                 </p>
               </div>
             )}
           </div>
 
           {/* Live Transcript */}
-          <div className="card">
-            <h2 className="text-xl font-bold mb-4">Transcript</h2>
+          <div className="bg-[#2E1616] border-2 border-[#5A3838] p-6 shadow-2xl">
+            <h2 className="text-xl font-serif text-[#F5E6D3] mb-6">Transcript</h2>
             <div className="h-96 overflow-y-auto space-y-3 pr-2">
               {transcript.length === 0 ? (
-                <p className="text-gray-500 text-sm">
+                <p className="text-[#B39B8A] text-sm">
                   Conversation will appear here...
                 </p>
               ) : (
                 transcript.map((msg, index) => (
                   <div
                     key={index}
-                    className={`p-3 rounded-lg ${
+                    className={`p-3 border-2 ${
                       msg.source === 'ai'
-                        ? 'bg-blue-50 text-blue-900'
-                        : 'bg-gray-100 text-gray-900'
+                        ? 'bg-[#FF7A59]/10 border-[#FF7A59] text-[#F5E6D3]'
+                        : 'bg-[#F5E6D3]/10 border-[#F5E6D3] text-[#F5E6D3]'
                     }`}
                   >
-                    <div className="font-medium text-sm mb-1">
+                    <div className="font-medium text-xs mb-1 opacity-70">
                       {msg.source === 'ai' ? 'Officer' : 'You'}
                     </div>
                     <div className="text-sm">
@@ -356,17 +421,17 @@ const Interview = () => {
         </div>
 
         {/* Mode Info */}
-        <div className="mt-6 card bg-blue-50">
-          <p className="text-sm text-gray-700">
+        <div className="mt-6 bg-[#2E1616] border-2 border-[#5A3838] p-6 shadow-2xl">
+          <p className="text-sm text-[#B39B8A]">
             {mode === INTERVIEW_MODES.PRACTICE ? (
               <>
-                <strong>Practice Mode:</strong> You'll receive real-time feedback and red flag alerts during the interview.
-                After completing the interview, you'll get a comprehensive analysis with recommendations.
+                <strong className="text-[#F5E6D3]">Practice Mode:</strong> You'll receive real-time feedback and red flag alerts during the interview.
+                After completing, you'll get comprehensive analysis with recommendations.
               </>
             ) : (
               <>
-                <strong>Simulation Mode:</strong> This is a realistic interview experience with no interruptions.
-                You'll receive comprehensive feedback and analysis after completing the interview.
+                <strong className="text-[#F5E6D3]">Simulation Mode:</strong> Realistic interview experience with no interruptions.
+                You'll receive comprehensive feedback after completing the interview.
               </>
             )}
           </p>
