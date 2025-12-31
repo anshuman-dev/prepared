@@ -1,9 +1,32 @@
-import { getGenerativeModel } from '../config/vertexai.js';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import {
   generateSystemPrompt as createSystemPrompt,
-  generateRedFlagPrompt,
   generateAnalysisPrompt
 } from '../prompts/index.js';
+
+// Lazy initialization of Gemini with API key (free tier)
+let genAI = null;
+
+const getGenAI = () => {
+  if (!genAI) {
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY environment variable is not set');
+    }
+    console.log('🔑 Initializing Gemini with API Key:',
+      `${process.env.GEMINI_API_KEY.substring(0, 10)}...${process.env.GEMINI_API_KEY.substring(process.env.GEMINI_API_KEY.length - 4)}`);
+    genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  }
+  return genAI;
+};
+
+/**
+ * Get Gemini Model Instance (using free tier API)
+ */
+const getModel = () => {
+  return getGenAI().getGenerativeModel({
+    model: process.env.GEMINI_MODEL || 'gemini-1.5-flash'
+  });
+};
 
 /**
  * Generate System Prompt for Interview
@@ -13,87 +36,130 @@ export const generateSystemPrompt = (userProfile, mode) => {
 };
 
 /**
- * Process Conversation Turn with Gemini
+ * Process Conversation Turn with Gemini (for ElevenLabs Custom LLM)
  */
 export const processConversationTurn = async (systemPrompt, conversationHistory, mode) => {
-  // TODO: Implement actual Gemini API call
-  // This is a placeholder that will be implemented when Vertex AI is set up
+  try {
+    const model = getModel();
 
-  const model = getGenerativeModel();
+    // Build conversation history for Gemini
+    // Gemini's chat history must alternate between user and model roles
+    const formattedHistory = [];
 
-  // For now, return a mock response
-  return {
-    content: "Thank you. What will you study and why this specific university?"
-  };
+    // If conversation is empty (first message), just include system prompt
+    if (conversationHistory.length === 0) {
+      const chat = model.startChat({
+        history: [
+          {
+            role: 'user',
+            parts: [{ text: `SYSTEM INSTRUCTIONS:\n${systemPrompt}\n\nYou are now in this role. Begin the interview.` }]
+          },
+          {
+            role: 'model',
+            parts: [{ text: 'Understood. I am ready to conduct the interview.' }]
+          }
+        ]
+      });
 
-  // Actual implementation (to be completed):
-  // const chat = model.startChat({
-  //   history: [
-  //     { role: 'system', parts: [{ text: systemPrompt }] },
-  //     ...conversationHistory
-  //   ]
-  // });
-  // const result = await chat.sendMessage(conversationHistory[conversationHistory.length - 1].content);
-  // return { content: result.response.text() };
+      const result = await chat.sendMessage('Begin the interview with your opening question.');
+      return { content: result.response.text() };
+    }
+
+    // Add system context as first exchange
+    formattedHistory.push({
+      role: 'user',
+      parts: [{ text: `SYSTEM INSTRUCTIONS:\n${systemPrompt}\n\nYou are now in this role. Begin the interview.` }]
+    });
+    formattedHistory.push({
+      role: 'model',
+      parts: [{ text: 'Good morning. Please state your full name and the type of visa you are applying for.' }]
+    });
+
+    // Add all conversation history except the last user message
+    // (we'll send that separately)
+    for (let i = 0; i < conversationHistory.length - 1; i++) {
+      const msg = conversationHistory[i];
+      const role = msg.role === 'user' ? 'user' : 'model';
+      formattedHistory.push({
+        role,
+        parts: [{ text: msg.content }]
+      });
+    }
+
+    // Start chat with history
+    const chat = model.startChat({
+      history: formattedHistory
+    });
+
+    // Send the last user message
+    const lastMessage = conversationHistory[conversationHistory.length - 1];
+    const result = await chat.sendMessage(lastMessage.content);
+    const response = result.response;
+
+    return {
+      content: response.text()
+    };
+  } catch (error) {
+    console.error('Error in processConversationTurn:', error);
+    console.error('Error details:', error.message);
+    throw new Error('Failed to process conversation turn: ' + error.message);
+  }
 };
 
 /**
- * Detect Red Flags in Practice Mode
+ * Detect Red Flags (disabled for simulation mode)
  */
-export const detectRedFlags = async (answer, question, visaType, country) => {
-  // TODO: Implement actual Gemini API call for red flag detection
-  // For now, return null (will be implemented when Vertex AI is configured)
-
-  const prompt = generateRedFlagPrompt(visaType, country, question, answer);
-
-  // Placeholder - actual implementation:
-  // const model = getGenerativeModel();
-  // const result = await model.generateContent(prompt);
-  // const responseText = result.response.text();
-  // return JSON.parse(responseText);
-
-  return null; // No red flags detected (placeholder)
+export const detectRedFlags = async (answer, systemPrompt) => {
+  // Simulation mode doesn't need real-time red flag detection
+  return null;
 };
 
 /**
  * Analyze Complete Interview
  */
 export const analyzeInterview = async (transcript, userProfile) => {
-  const { visaType } = userProfile;
+  try {
+    const model = getModel();
+    const { visaType } = userProfile;
 
-  // TODO: Implement actual Gemini API call for analysis
-  // For now, return placeholder data (will be implemented when Vertex AI is configured)
+    const prompt = generateAnalysisPrompt(visaType, userProfile, transcript);
 
-  const prompt = generateAnalysisPrompt(visaType, userProfile, transcript);
+    console.log('🔍 Starting interview analysis...');
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text();
+    console.log('✅ Analysis completed');
 
-  // Placeholder - actual implementation:
-  // const model = getGenerativeModel();
-  // const result = await model.generateContent(prompt);
-  // const responseText = result.response.text();
-  // return JSON.parse(responseText);
+    // Extract JSON from response
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.error('❌ Failed to parse JSON from response:', responseText.substring(0, 200));
+      throw new Error('Failed to parse analysis response');
+    }
 
-  return {
-    overallScore: 7.5,
-    approvalLikelihood: 75,
-    likelyOutcome: 'approved',
-    keyFactor: 'Strong academic background and clear return plans',
-    redFlags: [],
-    strengths: ['Clear answers', 'Confident delivery', 'Specific study plans'],
-    scores: {
-      clarity: 8,
-      confidence: 7,
-      specificity: 7,
-      returnIntent: 8
-    },
-    recommendations: [
-      'Practice explaining your return plans with more specific details',
-      'Prepare concrete examples of career opportunities in your home country',
-      'Be ready to discuss why this specific university for your field'
-    ],
-    weakAnswersAnalysis: [],
-    nextFocus: 'Strengthen return intent demonstration',
-    readyForRealInterview: false,
-    whatsMissing: 'Need more specific details about post-graduation career plans',
-    recommendedSessions: 2
-  };
+    const analysis = JSON.parse(jsonMatch[0]);
+
+    return {
+      overallScore: analysis.overallScore || 0,
+      approvalLikelihood: analysis.approvalLikelihood || 0,
+      likelyOutcome: analysis.likelyOutcome || 'uncertain',
+      keyFactor: analysis.keyFactor || '',
+      redFlags: analysis.redFlags || [],
+      strengths: analysis.strengths || [],
+      scores: {
+        clarity: analysis.scores?.clarity || 0,
+        confidence: analysis.scores?.confidence || 0,
+        specificity: analysis.scores?.specificity || 0,
+        returnIntent: analysis.scores?.returnIntent || 0
+      },
+      recommendations: analysis.recommendations || [],
+      weakAnswersAnalysis: analysis.weakAnswersAnalysis || [],
+      nextFocus: analysis.nextFocus || '',
+      readyForRealInterview: analysis.readyForRealInterview || false,
+      whatsMissing: analysis.whatsMissing || '',
+      recommendedSessions: analysis.recommendedSessions || 3
+    };
+  } catch (error) {
+    console.error('Error in analyzeInterview:', error);
+    throw new Error('Failed to analyze interview');
+  }
 };
