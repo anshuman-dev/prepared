@@ -1,14 +1,22 @@
 import express from 'express';
+import cors from 'cors';
 import * as firestoreService from '../services/firestoreService.js';
 import * as geminiService from '../services/geminiService.js';
 
 const router = express.Router();
 
+// Allow all origins for this endpoint (needed for ElevenLabs)
+const openCors = cors({
+  origin: '*',
+  methods: ['POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+});
+
 /**
  * OpenAI-compatible Chat Completions endpoint for ElevenLabs
  * POST /chat/completions
  */
-router.post('/chat/completions', async (req, res) => {
+router.post('/chat/completions', openCors, async (req, res) => {
   try {
     console.log('🔵 Chat Completions called!');
     console.log('Request body:', JSON.stringify(req.body, null, 2));
@@ -125,7 +133,7 @@ router.post('/chat/completions', async (req, res) => {
 
       res.write(`data: ${JSON.stringify(chunk)}\n\n`);
 
-      // Send final chunk with finish_reason
+      // Send final chunk with finish_reason and usage info
       const finalChunk = {
         id: streamId,
         object: 'chat.completion.chunk',
@@ -137,7 +145,12 @@ router.post('/chat/completions', async (req, res) => {
             delta: {},
             finish_reason: 'stop'
           }
-        ]
+        ],
+        usage: {
+          prompt_tokens: Math.ceil(JSON.stringify(messages).length / 4),
+          completion_tokens: Math.ceil(response.content.length / 4),
+          total_tokens: Math.ceil((JSON.stringify(messages).length + response.content.length) / 4)
+        }
       };
 
       res.write(`data: ${JSON.stringify(finalChunk)}\n\n`);
